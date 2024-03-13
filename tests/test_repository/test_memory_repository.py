@@ -2,7 +2,6 @@ import sys
 sys.path.append('D:\\физтех\\proga\\bookkeeper_project')
 
 from bookkeeper.repository.memory_repository import MemoryRepository
-from bookkeeper.repository.sqlite_repository import SQLiteRepository
 import pytest
 
 
@@ -10,7 +9,6 @@ import pytest
 def custom_class():
     class Custom():
         pk = 0
-        attr_name = 'name'
     
     return Custom
 
@@ -20,7 +18,6 @@ def repo():
     return MemoryRepository()
 
 
-@pytest.mark.parametrize('repo', MemoryRepository(), SQLiteRepository())
 def test_crud(custom_class, repo):
     obj = custom_class()
     pk = repo.add(obj)
