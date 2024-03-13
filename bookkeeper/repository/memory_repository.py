@@ -40,6 +40,13 @@ class MemoryRepository(AbstractRepository[T]):
     def get_all(self, where: Dict[str, Any] | None = None) -> List[T]:
         if where is None:
             return list(self._container.values())
-        return [obj for obj in self._container.values()
-                if all(getattr(obj, attr) == value)
-                for attr, value in where.items()]
+        res = []
+        for obj in self._container.values():
+            flag = 0
+            for attr, value in where.items():
+                if getattr(obj, attr) != value:
+                    flag = 1
+                    break
+            if not flag:
+                res.append(obj)
+        return res
