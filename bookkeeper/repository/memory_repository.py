@@ -34,7 +34,7 @@ class MemoryRepository(AbstractRepository[T]):
             raise ValueError('attempt to update object with unknown pk')
         self._container[obj.pk] = obj
 
-    def delete(self, pk: int) -> None:
+    def delete(self, pk: int) -> T:
         return self._container.pop(pk)
     
     def get_all(self, where: Dict[str, Any] | None = None) -> List[T]:

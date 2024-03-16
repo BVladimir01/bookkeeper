@@ -72,3 +72,4 @@ def test_get_all_with_condition(repo, custom_class):
         objects.append(o)
     assert repo.get_all({'name': '0'}) == [objects[0]]
     assert repo.get_all({'test': 'test'}) == objects
+    

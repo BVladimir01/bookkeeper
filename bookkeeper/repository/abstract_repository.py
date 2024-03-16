@@ -34,9 +34,9 @@ class AbstractRepository(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def delete(self, pk: int) -> None:
+    def delete(self, pk: int) -> T:
         """
-        Удалить запись
+        Удалить запись, вернуть удаленную запись
         """
 
     @abstractmethod
