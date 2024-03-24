@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from bookkeeper.models.category import Category
 
 
 @dataclass

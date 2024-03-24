@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from bookkeeper.repository.abstract_repository import AbstractRepository
+from repository.abstract_repository import AbstractRepository
 
 @dataclass
 class Category:

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from bookkeeper.repository.abstract_repository import AbstractRepository
 from datetime import datetime
 
 
