@@ -7,7 +7,11 @@ from models import budget, category, expense
 from repository import sqlite_repository
 
 
-class CategoryViewPort(QtWidgets.)
+class CategoryItem(QtWidgets.QTreeWidgetItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    
 
 class CategoryTree(QtWidgets.QTreeWidget):
     def __init__(self, *args, **kwargs):
@@ -15,9 +19,9 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
         self.setColumnCount(0)
         self.setExpandsOnDoubleClick(False)
-        item = QtWidgets.QTreeWidgetItem(self)
+        item = CategoryItem(self)
         item.setText(0, 'oslo')
-        item2 = QtWidgets.QTreeWidgetItem(item)
+        item2 = CategoryItem(item)
         item2.setText(0, 'osaka')
         item2.setFlags(item2.flags() | Qt.ItemIsEditable)
         item.setFlags(item.flags() | Qt.ItemIsEditable)
@@ -28,35 +32,46 @@ class CategoryTree(QtWidgets.QTreeWidget):
         self.item = item
         self.item2 = item2
         viewport = self.viewport()
-
+        viewport.installEventFilter(self)
         signal = self.itemDoubleClicked
+    
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.MouseMove:
-            x = event.x()
-            y = event.y()
-            self.mouse_tracker_label.setText(f"Mouse moved to ({x}, {y})")
+    # def eventFilter(self, obj, event):
+    #     if event.type() == QEvent.MouseButtonPress:
+    #         button = ""
+    #         if event.button() == Qt.LeftButton:
+    #             print("Left")
+    #         elif event.button() == Qt.RightButton:
+    #             print("Right")
+    #         elif event.button() == Qt.MiddleButton:
+    #             print("Middle")
 
-        elif event.type() == QEvent.MouseButtonPress:
-            button = ""
-            if event.button() == Qt.LeftButton:
-                button = "Left"
-            elif event.button() == Qt.RightButton:
-                button = "Right"
-            elif event.button() == Qt.MiddleButton:
-                button = "Middle"
+    #     return super().eventFilter(obj, event)
+    
 
-            self.mouse_tracker_label.setText(f"{button} button clicked")
-
-        return super().eventFilter(obj, event)
+    def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
+        print(type(self.itemAt(arg__1.pos())))
+        if type(self.itemAt(arg__1.pos())) == CategoryItem:
+            self.menu = QtWidgets.QMenu(self)
+            self.menu.addAction('edit')
+            self.menu.addAction('delete')
+            # add other required actions
+            self.menu.exec(arg__1.globalPos())
+            return super().contextMenuEvent(arg__1)
+        else:
+            self.menu = QtWidgets.QMenu(self)
+            self.menu.addAction('add')
+            # add other required actions
+            self.menu.exec(arg__1.globalPos())
+            return super().contextMenuEvent(arg__1)
     
 
     # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
     #     if event.button() == Qt.RightButton:
     #         print('right')
     #     return super().mousePressEvent(event)
-    
 
+        
 
 def greeter(func):
     print('in decor')
@@ -70,16 +85,26 @@ class MyWindow(QtWidgets.QWidget):
 
     cat_add_button_signal = Signal(int, str)
 
-    def __init__(self, presenter=None):
+    def __init__(self, presenter: Bookkeeper = None):
         super().__init__()
 
         self.treeWidget = CategoryTree()
-
+        self.presenter = presenter
         self.init_ui()
+        self.init_cats()
+
+
+
+    def init_cats(self):
+        cat_list = self.presenter.cat_repo.get_all()
+        root_cats = [cat for cat in cat_list if cat.parent == None]
+        print(cat_list)
+        print(root_cats)
+        for cat in root_cats:
+            item = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            print(cat)
+            item.setText(0, cat.name)
         
-
-
-
 
     # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
     #     print(event)

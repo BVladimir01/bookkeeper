@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from bookkeeper.repository.abstract_repository import AbstractRepository
+from repository.abstract_repository import AbstractRepository
 from typing import List
 
 @dataclass
@@ -10,9 +10,9 @@ class Category:
     атрибуте parent (у категорий верхнего
     уровня None).
     """
-    name: str
-    parent: int | None = None
     pk: int = 0
+    name: str = ''
+    parent: int | None = None
 
     def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
         """return parent object from repository"""
