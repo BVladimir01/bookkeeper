@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from repository.abstract_repository import AbstractRepository
+from typing import List
 
 @dataclass
 class Category:
@@ -18,3 +19,7 @@ class Category:
         if self.parent is None:
             return None
         return repo.get(self.parent)
+    
+    def get_children(self, repo: AbstractRepository['Category']) -> 'List[Category] | None':
+        res = repo.get_all({'pk': self.pk})
+        

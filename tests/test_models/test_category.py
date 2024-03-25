@@ -45,3 +45,14 @@ def test_get_parent(repo):
     repo.add(c2)
     print(repo.get_all())
     assert c2.get_parent(repo) == c1
+
+
+def test_get_parent(repo):
+    c1 = Category(name='parent')
+    pk = repo.add(c1)
+    c2 = Category(name='name', parent=pk)
+    c3 = Category(name='name2', parent=pk)
+    repo.add(c2)
+    repo.add(c3)
+    print(repo.get_all())
+    assert c2.get_children(repo) == [c2, c3]
