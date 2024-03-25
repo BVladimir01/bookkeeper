@@ -55,4 +55,4 @@ def test_get_parent(repo):
     repo.add(c2)
     repo.add(c3)
     print(repo.get_all())
-    assert c2.get_children(repo) == [c2, c3]
+    assert c1.get_children(repo) == [c2, c3]

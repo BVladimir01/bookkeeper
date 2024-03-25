@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from repository.abstract_repository import AbstractRepository
+from bookkeeper.repository.abstract_repository import AbstractRepository
 from typing import List
 
 @dataclass
@@ -21,5 +21,5 @@ class Category:
         return repo.get(self.parent)
     
     def get_children(self, repo: AbstractRepository['Category']) -> 'List[Category] | None':
-        res = repo.get_all({'pk': self.pk})
-        
+        res = repo.get_all({'parent': self.pk})
+        return res

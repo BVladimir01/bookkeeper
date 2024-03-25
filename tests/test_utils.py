@@ -85,7 +85,7 @@ class MyWindow(QtWidgets.QWidget):
         if answer:
             print('yes')
             print(type(answer))
-            print(s)
+            print(self)
         else:
             print('no')
 

@@ -1,10 +1,61 @@
 import sys
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtCore import QEvent, QObject, Qt, QSize
+from PySide6.QtCore import QEvent, QObject, Qt, QSize, Signal
 import random
 from presenter import Bookkeeper
 from models import budget, category, expense
 from repository import sqlite_repository
+
+
+class CategoryViewPort(QtWidgets.)
+
+class CategoryTree(QtWidgets.QTreeWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setColumnCount(0)
+        self.setExpandsOnDoubleClick(False)
+        item = QtWidgets.QTreeWidgetItem(self)
+        item.setText(0, 'oslo')
+        item2 = QtWidgets.QTreeWidgetItem(item)
+        item2.setText(0, 'osaka')
+        item2.setFlags(item2.flags() | Qt.ItemIsEditable)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        item.setToolTip(0, 'f2 to edit')
+        self.setHeaderLabel('label 1')
+        header = self.headerItem()
+        header.setHidden(True)
+        self.item = item
+        self.item2 = item2
+        viewport = self.viewport()
+
+        signal = self.itemDoubleClicked
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseMove:
+            x = event.x()
+            y = event.y()
+            self.mouse_tracker_label.setText(f"Mouse moved to ({x}, {y})")
+
+        elif event.type() == QEvent.MouseButtonPress:
+            button = ""
+            if event.button() == Qt.LeftButton:
+                button = "Left"
+            elif event.button() == Qt.RightButton:
+                button = "Right"
+            elif event.button() == Qt.MiddleButton:
+                button = "Middle"
+
+            self.mouse_tracker_label.setText(f"{button} button clicked")
+
+        return super().eventFilter(obj, event)
+    
+
+    # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     if event.button() == Qt.RightButton:
+    #         print('right')
+    #     return super().mousePressEvent(event)
+    
 
 
 def greeter(func):
@@ -17,30 +68,16 @@ def greeter(func):
 
 class MyWindow(QtWidgets.QWidget):
 
+    cat_add_button_signal = Signal(int, str)
+
     def __init__(self, presenter=None):
         super().__init__()
 
+        self.treeWidget = CategoryTree()
 
-        treeWidget = QtWidgets.QTreeWidget()
-        treeWidget.setColumnCount(0)
-        treeWidget.setExpandsOnDoubleClick(False)
-        item = QtWidgets.QTreeWidgetItem(treeWidget)
-        item.setText(0, 'oslo')
-        item2 = QtWidgets.QTreeWidgetItem(item)
-        item2.setText(0, 'osaka')
-        item2.setFlags(item2.flags() | Qt.ItemIsEditable)
-        item.setFlags(item.flags() | Qt.ItemIsEditable)
-        item.setToolTip(0, 'f2 to edit')
-        treeWidget.setHeaderLabel('label 1')
-        header = treeWidget.headerItem()
-        header.setHidden(True)
-        # treeWidget.addTopLevelItem(item)
-        self.treeWidget = treeWidget
-        treeWidget.mousePressEvent = greeter(treeWidget.mousePressEvent)
-        
-        signal = treeWidget.itemDoubleClicked
-        # signal.connect(self.decorated_expand)
         self.init_ui()
+        
+
 
 
 
