@@ -2,6 +2,8 @@ from repository.abstract_repository import AbstractRepository
 import sys
 from models.category import Category
 
+
+
 class Bookkeeper:
     def __init__(self, cat_repo: AbstractRepository = None, bud_repo: AbstractRepository = None, exp_repo: AbstractRepository = None) -> None:
         self.cat_repo = cat_repo
@@ -18,3 +20,11 @@ class Bookkeeper:
             f'Категория {name} уже существует')
         cat = Category(name, parent)
         self.cat_repo.add(cat)
+
+    
+    def cat_list_to_tree_like(self):
+        pass
+        
+
+def insert_list(list):
+    pass

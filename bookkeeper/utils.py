@@ -19,18 +19,18 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
         self.setColumnCount(0)
         self.setExpandsOnDoubleClick(False)
-        item = CategoryItem(self)
-        item.setText(0, 'oslo')
-        item2 = CategoryItem(item)
-        item2.setText(0, 'osaka')
-        item2.setFlags(item2.flags() | Qt.ItemIsEditable)
-        item.setFlags(item.flags() | Qt.ItemIsEditable)
-        item.setToolTip(0, 'f2 to edit')
+        # item = CategoryItem(self)
+        # item.setText(0, 'oslo')
+        # item2 = CategoryItem(item)
+        # item2.setText(0, 'osaka')
+        # item2.setFlags(item2.flags() | Qt.ItemIsEditable)
+        # item.setFlags(item.flags() | Qt.ItemIsEditable)
+        # item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
         self.setHeaderLabel('label 1')
         header = self.headerItem()
         header.setHidden(True)
-        self.item = item
-        self.item2 = item2
+        # self.item = item
+        # self.item2 = item2
         viewport = self.viewport()
         viewport.installEventFilter(self)
         signal = self.itemDoubleClicked
@@ -61,6 +61,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
         else:
             self.menu = QtWidgets.QMenu(self)
             self.menu.addAction('add')
+            self.menu.addAction('edit')
+            self.menu.addAction('delete')
             # add other required actions
             self.menu.exec(arg__1.globalPos())
             return super().contextMenuEvent(arg__1)
@@ -98,12 +100,30 @@ class MyWindow(QtWidgets.QWidget):
     def init_cats(self):
         cat_list = self.presenter.cat_repo.get_all()
         root_cats = [cat for cat in cat_list if cat.parent == None]
-        print(cat_list)
-        print(root_cats)
+        added = []
+        translator = {}
         for cat in root_cats:
             item = QtWidgets.QTreeWidgetItem(self.treeWidget)
-            print(cat)
             item.setText(0, cat.name)
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+            item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
+            added.append(cat.pk)
+            cat_list.remove(cat)
+            translator[cat.pk] = item
+
+        while True:
+            for cat in cat_list:
+                if cat.parent in added:
+                    item = QtWidgets.QTreeWidgetItem(translator[cat.parent])
+                    item.setText(0, cat.name)
+                    item.setFlags(item.flags() | Qt.ItemIsEditable)
+                    item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
+                    added.append(cat.pk)
+                    cat_list.remove(cat)
+                    translator[cat.pk] = item
+            if cat_list == []:
+                break
+
         
 
     # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
