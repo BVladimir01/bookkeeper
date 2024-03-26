@@ -1,5 +1,5 @@
 import sys
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtCore import QEvent, QObject, Qt, QSize, Signal
 import random
 from presenter import Bookkeeper
@@ -10,27 +10,24 @@ from repository import sqlite_repository
 class CategoryItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.setFlags(self.flags() | Qt.ItemIsEditable)
+        self.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
     
 
 class CategoryTree(QtWidgets.QTreeWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
+    cat_signal = QtCore.Signal(CategoryItem)
+
+    def __init__(self, main_window: 'MyWindow', presenter: Bookkeeper):
+        super().__init__()
+
+        self.main_window = main_window
+        self.presenter = presenter
         self.setColumnCount(0)
         self.setExpandsOnDoubleClick(False)
-        # item = CategoryItem(self)
-        # item.setText(0, 'oslo')
-        # item2 = CategoryItem(item)
-        # item2.setText(0, 'osaka')
-        # item2.setFlags(item2.flags() | Qt.ItemIsEditable)
-        # item.setFlags(item.flags() | Qt.ItemIsEditable)
-        # item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
         self.setHeaderLabel('label 1')
         header = self.headerItem()
         header.setHidden(True)
-        # self.item = item
-        # self.item2 = item2
         viewport = self.viewport()
         viewport.installEventFilter(self)
         signal = self.itemDoubleClicked
@@ -51,22 +48,87 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
         print(type(self.itemAt(arg__1.pos())))
+        self.last_active_item = self.itemAt(arg__1.pos())
         if type(self.itemAt(arg__1.pos())) == CategoryItem:
             self.menu = QtWidgets.QMenu(self)
-            self.menu.addAction('edit')
-            self.menu.addAction('delete')
+
+            edit_action = self.menu.addAction('edit')
+            edit_action.triggered.connect(self.edit_action_slot)
+
+            delete_action = self.menu.addAction('delete')
+            delete_action.triggered.connect(self.delete_action_slot)
+
+            add_action = self.menu.addAction('add')
+            add_action.triggered.connect(self.add_action_slot)
+
             # add other required actions
             self.menu.exec(arg__1.globalPos())
             return super().contextMenuEvent(arg__1)
         else:
             self.menu = QtWidgets.QMenu(self)
-            self.menu.addAction('add')
-            self.menu.addAction('edit')
-            self.menu.addAction('delete')
+            add_action = self.menu.addAction('add')
+            add_action.triggered.connect(self.add_action_slot)
             # add other required actions
             self.menu.exec(arg__1.globalPos())
             return super().contextMenuEvent(arg__1)
     
+
+    def edit_action_slot(self):
+        old_cat_name = self.last_active_item.text(0)
+        print('editing')
+        dlg = QtWidgets.QInputDialog(self)
+        dlg.resize(200, 50)
+        new_name, ok = dlg.getText(self, 'Редактирование', 'Введите новое название категории')
+        old_category = self.presenter.cat_repo.get_all({'name': old_cat_name})[0]
+        new_category = self.presenter.cat_class.copy(old_category)
+        new_category.name = new_name
+        print(new_category)
+        self.presenter.cat_repo.update(new_category)
+        self.main_window.init_cats()
+    
+    def add_action_slot(self):
+        print('adding')
+        if self.last_active_item:
+            where_name = self.last_active_item.text(0)
+        else:
+            where_name = None
+        dlg = QtWidgets.QInputDialog(self)
+        dlg.resize(200, 50)
+        new_name, ok = dlg.getText(self, 'Добавление', 'Введите название новой категории')
+        if where_name:
+            parent_pk = self.presenter.cat_repo.get_all({'name': where_name})[0].pk
+        else:
+            parent_pk = None
+        new_category = self.presenter.cat_class(name=new_name, parent=parent_pk)
+        print(new_category)
+        self.presenter.cat_repo.add(new_category)
+        self.main_window.init_cats()
+
+
+    def delete_action_slot(self):
+        print('deleting')
+        dlg = QtWidgets.QMessageBox(self)
+        dlg.setWindowTitle("Удаление")
+        dlg.setText("Что делать с подкатегорями?")
+        delete_button = QtWidgets.QMessageBox.StandardButton.Discard
+        dlg.addButton(delete_button)
+        dlg.setButtonText(delete_button, 'Удалить')
+
+        transfer_button = QtWidgets.QMessageBox.StandardButton.SaveAll
+        dlg.addButton(transfer_button)
+        dlg.setButtonText(transfer_button, 'Унаследовать')
+
+        cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
+        dlg.addButton(cancel_button)
+        dlg.setButtonText(cancel_button, 'Отмена')
+        dlg.setIcon(QtWidgets.QMessageBox.Question)
+
+        res = dlg.exec()
+
+        if res == delete_button:
+            pass
+        print(res)
+
 
     # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
     #     if event.button() == Qt.RightButton:
@@ -90,23 +152,22 @@ class MyWindow(QtWidgets.QWidget):
     def __init__(self, presenter: Bookkeeper = None):
         super().__init__()
 
-        self.treeWidget = CategoryTree()
         self.presenter = presenter
+        self.treeWidget = CategoryTree(self, presenter)
         self.init_ui()
         self.init_cats()
 
 
 
     def init_cats(self):
+        self.treeWidget.clear()
         cat_list = self.presenter.cat_repo.get_all()
         root_cats = [cat for cat in cat_list if cat.parent == None]
         added = []
         translator = {}
         for cat in root_cats:
-            item = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            item = CategoryItem(self.treeWidget)
             item.setText(0, cat.name)
-            item.setFlags(item.flags() | Qt.ItemIsEditable)
-            item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
             added.append(cat.pk)
             cat_list.remove(cat)
             translator[cat.pk] = item
@@ -114,15 +175,14 @@ class MyWindow(QtWidgets.QWidget):
         while True:
             for cat in cat_list:
                 if cat.parent in added:
-                    item = QtWidgets.QTreeWidgetItem(translator[cat.parent])
+                    item = CategoryItem(translator[cat.parent])
                     item.setText(0, cat.name)
-                    item.setFlags(item.flags() | Qt.ItemIsEditable)
-                    item.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
                     added.append(cat.pk)
                     cat_list.remove(cat)
                     translator[cat.pk] = item
             if cat_list == []:
                 break
+        self.presenter.cat_item_dic = translator
 
         
 
@@ -242,7 +302,7 @@ cat_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeep
 budget_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', budget.Budget)
 expense_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', expense.Expense)
 app = QtWidgets.QApplication()
-window = MyWindow(Bookkeeper(cat_repo, budget_repo, expense_repo))
+window = MyWindow(Bookkeeper(cat_repo, budget_repo, expense_repo, category.Category, budget.Budget, expense.Expense))
 window.setWindowTitle('The Bookkeeper app')
 window.resize(500, 500)
 

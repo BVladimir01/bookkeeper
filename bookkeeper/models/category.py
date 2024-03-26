@@ -23,3 +23,7 @@ class Category:
     def get_children(self, repo: AbstractRepository['Category']) -> 'List[Category] | None':
         res = repo.get_all({'parent': self.pk})
         return res
+    
+    @classmethod
+    def copy(cls, obj):
+        return cls(obj.pk, obj.name, obj.parent)
