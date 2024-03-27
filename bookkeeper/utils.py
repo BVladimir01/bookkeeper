@@ -225,6 +225,9 @@ class BudgetTable(QtWidgets.QTableWidget):
         self.item(1, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount))
         self.item(2, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount))
 
+    def count_expenses(self):
+        pass
+
 
 class ExpenseTable(QtWidgets.QTableWidget):
     def __init__(self, parent: QtWidgets.QWidget, presenter: Bookkeeper):
@@ -271,9 +274,9 @@ class ExpenseTable(QtWidgets.QTableWidget):
                     self.setItem(0, i, QtWidgets.QTableWidgetItem(''))
 
         self.sortByColumn(1, QtCore.Qt.SortOrder.DescendingOrder)
+        print(self.parent())
         self.itemChanged.connect(self.change_slot)
-    
-    
+
     def change_slot(self, item: QtWidgets.QTableWidgetItem):
         row = item.row()
         pk = int(self.item(row, 0).text())
@@ -297,8 +300,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         self.update_table()
 
 
-
-    
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
         print(type(self.itemAt(arg__1.pos())))
         self.last_active_item = self.itemAt(arg__1.pos())
@@ -341,7 +342,8 @@ class ExpenseTable(QtWidgets.QTableWidget):
             self.update_table()
         
 
-
+    def add_entry(self, obj):
+        print(obj)
 
 def greeter(func):
     print('in decor')
@@ -365,7 +367,6 @@ class MyWindow(QtWidgets.QWidget):
         self.init_ui()
         self.init_cats()
         self.budget_table.initiated = True
-
 
 
     def init_cats(self):
@@ -394,8 +395,6 @@ class MyWindow(QtWidgets.QWidget):
         self.presenter.cat_item_dic = translator
 
         
-
-
     # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
     #     print(event)
     #     return super().eventFilter(watched, event)
@@ -414,7 +413,6 @@ class MyWindow(QtWidgets.QWidget):
     #         self.treeWidget.expandItem(item)
 
 
-
     def init_ui(self):
         self.general_layout = QtWidgets.QVBoxLayout()
 
@@ -430,66 +428,41 @@ class MyWindow(QtWidgets.QWidget):
         self.setLayout(self.general_layout)
 
 
-
-    # def add_budget_table(self):
-    #     self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
-
-    #     budget_table = QtWidgets.QTableWidget(4, 20)
-    #     budget_table.setColumnCount(2)
-    #     budget_table.setRowCount(3)
-
-    #     budget_table.setHorizontalHeaderLabels(('Сумма', 'Бюджет'))
-    #     budget_table.setVerticalHeaderLabels(('День', 'Неделя', 'Месяц'))
-    #     hor_header = budget_table.horizontalHeader()
-    #     hor_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-    #     hor_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-
-    #     # hor_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
-    #     # hor_header.setLineWidth(1)
-    #     # ver_header = budget_table.verticalHeader()
-    #     # ver_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
-    #     # ver_header.setLineWidth(1)
-    #     # budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-    #     budget_table.setFixedHeight(116)
-
-    #     self.budget_table = budget_table
-    #     self.general_layout.addWidget(budget_table)
-
-
     def add_edit_layout(self):
         edit_layout = QtWidgets.QGridLayout()
 
-        edit_layout.addWidget(QtWidgets.QLabel('Сумма'), 0, 0)
-        self.sum_line = QtWidgets.QLineEdit()
-        edit_layout.addWidget(self.sum_line, 0, 1)
+        edit_layout.addWidget(QtWidgets.QLabel('Дата расхода'), 0, 0)
+        self.edit_date_line = QtWidgets.QLineEdit()
+        edit_layout.addWidget(self.edit_date_line, 0, 1)
 
-        edit_layout.addWidget(QtWidgets.QLabel('Категория'), 1, 0)
-        self.category_box = QtWidgets.QComboBox()
-        self.category_box.addItem('Категория')
-        edit_layout.addWidget(self.category_box, 1, 1)
-        self.edit_category_button = QtWidgets.QPushButton('Редактировать')
-        edit_layout.addWidget(self.edit_category_button, 1, 2)
+        edit_layout.addWidget(QtWidgets.QLabel('Сумма'), 1, 0)
+        self.edit_sum_line = QtWidgets.QLineEdit()
+        edit_layout.addWidget(self.edit_sum_line, 1, 1)
+
+        edit_layout.addWidget(QtWidgets.QLabel('Категория'), 2, 0)
+        self.choose_category_button = QtWidgets.QPushButton('Выбрать категорию')
+        edit_layout.addWidget(self.choose_category_button, 2, 1)
+
+        edit_layout.addWidget(QtWidgets.QLabel('Комментарий'), 3, 0)
+        self.edit_comment_line = QtWidgets.QTextEdit()
+        edit_layout.addWidget(self.edit_comment_line, 3, 1)
 
         self.add_entry_button = QtWidgets.QPushButton('Добавить')
         self.add_entry_button.clicked.connect(self.on_clicked)
-        edit_layout.addWidget(self.add_entry_button, 2, 1)
+        edit_layout.addWidget(self.add_entry_button, 4, 1)
 
         self.edit_layout = edit_layout
         self.general_layout.addLayout(edit_layout)
 
     
     def on_clicked(self):
-        dlg = QtWidgets.QMessageBox()
-        dlg.setWindowTitle('modal window')
-        dlg.setText("Здесь будет подробный текст вопроса")
-        dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        dlg.setIcon(QtWidgets.QMessageBox.Question)
-        answer = dlg.exec()
-        if answer:
-            print('yes')
-            print(type(answer))
-        else:
-            print('no')
+        expense_date = self.presenter.exp_class.MyDate(self.edit_date_line.text())
+        amount = int(self.edit_sum_line.text())
+        comment = self.edit_comment_line.toPlainText()
+        obj = self.presenter.exp_class(expense_date=expense_date,
+                                       amount=amount,
+                                       comment=comment)
+        self.expenses_table.add_entry(obj)
 
 
 cat_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', category.Category)
@@ -498,7 +471,7 @@ expense_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\book
 app = QtWidgets.QApplication()
 window = MyWindow(Bookkeeper(cat_repo, budget_repo, expense_repo, category.Category, budget.Budget, expense.Expense))
 window.setWindowTitle('The Bookkeeper app')
-window.resize(500, 500)
+window.resize(600, 800)
 
 
 if __name__ == '__main__':
