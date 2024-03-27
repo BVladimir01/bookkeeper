@@ -14,6 +14,8 @@ class CategoryItem(QtWidgets.QTreeWidgetItem):
         self.setToolTip(0, 'right click for options')
     
 
+
+#Хорошо бы здесь все сделать по ключу, а не по имени
 class CategoryTree(QtWidgets.QTreeWidget):
 
     cat_signal = QtCore.Signal(CategoryItem)
@@ -177,6 +179,50 @@ class CategoryTree(QtWidgets.QTreeWidget):
     #     return super().mousePressEvent(event)
 
         
+class BudgetTable(QtWidgets.QTableWidget):
+
+    def __init__(self, parent: QtWidgets.QWidget, presenter: Bookkeeper):
+        super().__init__(parent)
+        self.presenter = presenter
+        self.initiated = False
+
+        self.setColumnCount(2)
+        self.setRowCount(3)
+        self.setHorizontalHeaderLabels(('Сумма', 'Бюджет'))
+        self.setVerticalHeaderLabels(('День', 'Неделя', 'Месяц'))
+        hor_header = self.horizontalHeader()
+        hor_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        hor_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.setFixedHeight(116)
+
+        self.setItem(0, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'День'})[0].amount)))
+        self.setItem(1, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount)))
+        self.setItem(2, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount)))
+        self.itemChanged.connect(self.edit_slot)
+     
+
+    def edit_slot(self, item: QtWidgets.QTableWidgetItem):
+        if self.initiated:
+            try:
+                new_amount = item.text()
+                print('editing budget')
+                header = self.verticalHeaderItem(item.row()).text()
+                print(header)
+                old_obj = self.presenter.bud_repo.get_all({'time_period': header})[0]
+                old_obj.amount = int(new_amount)
+                self.presenter.bud_repo.update(old_obj)
+            except ValueError:
+                print('enter correct budget')
+                input()
+                self.update_table()
+
+
+    def update_table(self):
+        self.item(0, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'День'})[0].amount))
+        self.item(1, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount))
+        self.item(2, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount))
+
+
 
 def greeter(func):
     print('in decor')
@@ -195,8 +241,10 @@ class MyWindow(QtWidgets.QWidget):
 
         self.presenter = presenter
         self.treeWidget = CategoryTree(self, presenter)
+        self.budget_table = BudgetTable(self, presenter)
         self.init_ui()
         self.init_cats()
+        self.budget_table.initiated = True
 
 
 
@@ -227,6 +275,7 @@ class MyWindow(QtWidgets.QWidget):
 
         
 
+
     # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
     #     print(event)
     #     return super().eventFilter(watched, event)
@@ -248,9 +297,14 @@ class MyWindow(QtWidgets.QWidget):
 
     def init_ui(self):
         self.general_layout = QtWidgets.QVBoxLayout()
+
         self.add_expenses_table()
-        self.add_budget_table()
+
+        self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
+        self.general_layout.addWidget(self.budget_table)
+
         self.add_edit_layout()
+
         self.general_layout.addWidget(self.treeWidget)
 
         self.setLayout(self.general_layout)
@@ -278,29 +332,29 @@ class MyWindow(QtWidgets.QWidget):
         self.general_layout.addWidget(expenses_table)
 
 
-    def add_budget_table(self):
-        self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
+    # def add_budget_table(self):
+    #     self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
 
-        budget_table = QtWidgets.QTableWidget(4, 20)
-        budget_table.setColumnCount(2)
-        budget_table.setRowCount(3)
+    #     budget_table = QtWidgets.QTableWidget(4, 20)
+    #     budget_table.setColumnCount(2)
+    #     budget_table.setRowCount(3)
 
-        budget_table.setHorizontalHeaderLabels(('Сумма', 'Бюджет'))
-        budget_table.setVerticalHeaderLabels(('День', 'Неделя', 'Месяц'))
-        hor_header = budget_table.horizontalHeader()
-        hor_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        hor_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    #     budget_table.setHorizontalHeaderLabels(('Сумма', 'Бюджет'))
+    #     budget_table.setVerticalHeaderLabels(('День', 'Неделя', 'Месяц'))
+    #     hor_header = budget_table.horizontalHeader()
+    #     hor_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+    #     hor_header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
-        # hor_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
-        # hor_header.setLineWidth(1)
-        # ver_header = budget_table.verticalHeader()
-        # ver_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
-        # ver_header.setLineWidth(1)
-        # budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        budget_table.setFixedHeight(116)
+    #     # hor_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
+    #     # hor_header.setLineWidth(1)
+    #     # ver_header = budget_table.verticalHeader()
+    #     # ver_header.setFrameStyle(QtWidgets.QFrame.Box | QtWidgets.QFrame.Plain)
+    #     # ver_header.setLineWidth(1)
+    #     # budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+    #     budget_table.setFixedHeight(116)
 
-        self.budget_table = budget_table
-        self.general_layout.addWidget(budget_table)
+    #     self.budget_table = budget_table
+    #     self.general_layout.addWidget(budget_table)
 
 
     def add_edit_layout(self):

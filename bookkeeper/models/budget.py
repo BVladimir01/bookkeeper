@@ -6,12 +6,11 @@ class Budget:
     """
     Бюджет, по выбранной категории на выбранный срок
     """
-    amount: int
-    category: int
-    time_period: str = 'month'
     pk: int = 0
+    amount: int = 0
+    time_period: str = 'Месяц'
 
-    _time_period_options = {'day', 'week', 'month', 'year'}
+    _time_period_options = {'День', 'Неделя', 'Месяц'}
 
     def __post_init__(self):
         if not self.time_period in self._time_period_options:
