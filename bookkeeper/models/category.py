@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from repository.abstract_repository import AbstractRepository
 from typing import List
 
+
 @dataclass
 class Category:
     """
@@ -12,11 +13,11 @@ class Category:
     """
     pk: int = 0
     name: str = ''
-    parent: int | None = None
+    parent: int = 0
 
     def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
         """return parent object from repository"""
-        if self.parent is None:
+        if self.parent == 0:
             return None
         return repo.get(self.parent)
     

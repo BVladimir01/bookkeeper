@@ -5,7 +5,7 @@ import random
 from presenter import Bookkeeper
 from models import budget, category, expense
 from repository import sqlite_repository
-
+from datetime import date
 
 class CategoryItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, *args, **kwargs):
@@ -115,19 +115,21 @@ class CategoryTree(QtWidgets.QTreeWidget):
         where_name = self.last_active_item.text(0)
         cat_obj = self.presenter.cat_repo.get_all({'name': where_name})[0]
         has_children = cat_obj.get_children(self.presenter.cat_repo)
+
+        delete_button = QtWidgets.QMessageBox.StandardButton.Discard
+        transfer_button = QtWidgets.QMessageBox.StandardButton.SaveAll
+        cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
+
         if has_children:
             dlg = QtWidgets.QMessageBox(self)
             dlg.setWindowTitle("Удаление")
             dlg.setText("Что делать с подкатегорями?")
-            delete_button = QtWidgets.QMessageBox.StandardButton.Discard
             dlg.addButton(delete_button)
             dlg.setButtonText(delete_button, 'Удалить')
 
-            transfer_button = QtWidgets.QMessageBox.StandardButton.SaveAll
             dlg.addButton(transfer_button)
             dlg.setButtonText(transfer_button, 'Наследовать')
 
-            cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
             dlg.addButton(cancel_button)
             dlg.setButtonText(cancel_button, 'Отмена')
             dlg.setIcon(QtWidgets.QMessageBox.Question)
@@ -135,11 +137,9 @@ class CategoryTree(QtWidgets.QTreeWidget):
             dlg = QtWidgets.QMessageBox(self)
             dlg.setWindowTitle("Удаление")
             dlg.setText("Вы уверены, что хотите удалить?")
-            delete_button = QtWidgets.QMessageBox.StandardButton.Discard
             dlg.addButton(delete_button)
             dlg.setButtonText(delete_button, 'Удалить')
 
-            cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
             dlg.addButton(cancel_button)
             dlg.setButtonText(cancel_button, 'Отмена')
             dlg.setIcon(QtWidgets.QMessageBox.Question)
@@ -202,25 +202,144 @@ class BudgetTable(QtWidgets.QTableWidget):
      
 
     def edit_slot(self, item: QtWidgets.QTableWidgetItem):
-        if self.initiated:
-            try:
-                new_amount = item.text()
-                print('editing budget')
-                header = self.verticalHeaderItem(item.row()).text()
-                print(header)
-                old_obj = self.presenter.bud_repo.get_all({'time_period': header})[0]
-                old_obj.amount = int(new_amount)
-                self.presenter.bud_repo.update(old_obj)
-            except ValueError:
-                print('enter correct budget')
-                input()
-                self.update_table()
+        if item.column() == 1:
+            if self.initiated:
+                try:
+                    new_amount = item.text()
+                    print('editing budget')
+                    header = self.verticalHeaderItem(item.row()).text()
+                    print(header)
+                    old_obj = self.presenter.bud_repo.get_all({'time_period': header})[0]
+                    old_obj.amount = int(new_amount)
+                    self.presenter.bud_repo.update(old_obj)
+                except ValueError:
+                    print('enter correct budget')
+                    input()
+                    self.update_table()
+        if item.column() == 0:
+            pass
 
 
     def update_table(self):
         self.item(0, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'День'})[0].amount))
         self.item(1, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount))
         self.item(2, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount))
+
+
+class ExpenseTable(QtWidgets.QTableWidget):
+    def __init__(self, parent: QtWidgets.QWidget, presenter: Bookkeeper):
+        super().__init__(parent)
+
+        self.presenter = presenter
+
+        self.setColumnCount(5)
+        self.setRowCount(0)
+
+        self.setHorizontalHeaderLabels("pk Дата Сумма Категория Комментарий".split())
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
+        # self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.hideColumn(0)
+
+        self.verticalHeader().hide()
+        self.cols = ['pk', 'expense_date', 'amount', 'category', 'comment']
+
+        self.tranlator = {i:j for i, j in zip("pk Дата Сумма Категория Комментарий".split(), self.cols)}
+
+        self.itemChanged.connect(self.change_slot)
+        self.update_table()
+
+
+    def update_table(self):
+        self.itemChanged.disconnect(self.change_slot)
+        self.clearContents()
+        expenses = self.presenter.exp_repo.get_all()
+        for expense in expenses:
+            self.insertRow(0)
+            for i, attr in enumerate(self.cols):
+                text = str(getattr(expense, attr))
+                if text != 'None':
+                    if attr == 'category':
+                        cat = self.presenter.cat_repo.get(int(text))
+                        text = str(cat.name)
+                    self.setItem(0, i, QtWidgets.QTableWidgetItem(text))
+                else:
+                    self.setItem(0, i, QtWidgets.QTableWidgetItem(''))
+
+        self.sortByColumn(1, QtCore.Qt.SortOrder.DescendingOrder)
+        self.itemChanged.connect(self.change_slot)
+    
+    
+    def change_slot(self, item: QtWidgets.QTableWidgetItem):
+        row = item.row()
+        pk = int(self.item(row, 0).text())
+        old_obj = self.presenter.exp_repo.get(pk)
+        attr_name = self.cols[item.column()]
+        attr_type = old_obj.__annotations__[attr_name]
+
+        if attr_name == 'expense_date':
+            old_obj.expense_date = date.fromisoformat(item.text())
+        elif attr_name == 'amount':
+            old_obj.amount = int(item.text())
+        elif attr_name == 'category':
+            cat_obj = self.presenter.cat_repo.get_all({'name': item.text()})[0]
+            old_obj.category = cat_obj.pk
+        elif attr_name == 'comment':
+            old_obj.comment = item.text()
+
+        print('changing')
+        print(old_obj)
+        self.presenter.exp_repo.update(old_obj)
+        self.update_table()
+
+
+
+    
+    def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
+        print(type(self.itemAt(arg__1.pos())))
+        self.last_active_item = self.itemAt(arg__1.pos())
+        if type(self.itemAt(arg__1.pos())) == QtWidgets.QTableWidgetItem:
+            self.menu = QtWidgets.QMenu(self)
+
+            delete_action = self.menu.addAction('delete entry')
+            delete_action.triggered.connect(self.delete_action_slot)
+
+            # add other required actions
+            self.menu.exec(arg__1.globalPos())
+            return super().contextMenuEvent(arg__1)
+        else:
+            pass
+
+    
+    def delete_action_slot(self, action):
+        delete_button = QtWidgets.QMessageBox.StandardButton.Discard
+        cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
+
+        dlg = QtWidgets.QMessageBox(self)
+        dlg.setWindowTitle("Удаление")
+        dlg.setText("Вы уверены, что хотите удалить?")
+        dlg.addButton(delete_button)
+        dlg.setButtonText(delete_button, 'Удалить')
+
+        dlg.addButton(cancel_button)
+        dlg.setButtonText(cancel_button, 'Отмена')
+        dlg.setIcon(QtWidgets.QMessageBox.Question)
+
+        res = dlg.exec()
+        if res == delete_button:
+            self.itemChanged.disconnect(self.change_slot)
+            self.delete_process = True
+            row = self.last_active_item.row()
+            pk = int(self.item(row, 0).text())
+            print(pk)
+            self.presenter.exp_repo.delete(pk)
+            self.itemChanged.connect(self.change_slot)
+            self.update_table()
+        
 
 
 
@@ -242,6 +361,7 @@ class MyWindow(QtWidgets.QWidget):
         self.presenter = presenter
         self.treeWidget = CategoryTree(self, presenter)
         self.budget_table = BudgetTable(self, presenter)
+        self.expenses_table = ExpenseTable(self, presenter)
         self.init_ui()
         self.init_cats()
         self.budget_table.initiated = True
@@ -251,7 +371,7 @@ class MyWindow(QtWidgets.QWidget):
     def init_cats(self):
         self.treeWidget.clear()
         cat_list = self.presenter.cat_repo.get_all()
-        root_cats = [cat for cat in cat_list if cat.parent == None]
+        root_cats = [cat for cat in cat_list if cat.parent == 0]
         added = []
         translator = {}
         for cat in root_cats:
@@ -298,7 +418,8 @@ class MyWindow(QtWidgets.QWidget):
     def init_ui(self):
         self.general_layout = QtWidgets.QVBoxLayout()
 
-        self.add_expenses_table()
+        self.general_layout.addWidget(QtWidgets.QLabel('Записи'))
+        self.general_layout.addWidget(self.expenses_table)
 
         self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
         self.general_layout.addWidget(self.budget_table)
@@ -306,30 +427,8 @@ class MyWindow(QtWidgets.QWidget):
         self.add_edit_layout()
 
         self.general_layout.addWidget(self.treeWidget)
-
         self.setLayout(self.general_layout)
 
-
-    def add_expenses_table(self):
-        self.general_layout.addWidget(QtWidgets.QLabel('Последние расходы'))
-
-        expenses_table = QtWidgets.QTableWidget(4, 20)
-        expenses_table.setColumnCount(4)
-        expenses_table.setRowCount(20)
-
-        expenses_table.setHorizontalHeaderLabels("Дата Сумма Категория Комментарий".split())
-        header = expenses_table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
-
-        expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        expenses_table.verticalHeader().hide()
-
-        self.expenses_table = expenses_table
-        self.general_layout.addWidget(expenses_table)
 
 
     # def add_budget_table(self):

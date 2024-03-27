@@ -3,7 +3,6 @@ from typing import Any, Dict, List
 from repository.abstract_repository import AbstractRepository, T
 import sqlite3
 
-
 class SQLiteRepository(AbstractRepository[T]):
 
     def __init__(self, db_file: str, cls: type) -> None:
@@ -69,6 +68,8 @@ class SQLiteRepository(AbstractRepository[T]):
             conn.close()
             if args_list:
                 for args in args_list:
+                    types = [int,] + [typ for name, typ in self.fields.items()]
+                    args = [typ(arg) for typ, arg in zip(types, args)]
                     res_list.append(self.cls(*args)) 
             return res_list
         conditions = where.items()
