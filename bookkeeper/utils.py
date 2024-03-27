@@ -10,8 +10,8 @@ from repository import sqlite_repository
 class CategoryItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setFlags(self.flags() | Qt.ItemIsEditable)
-        self.setToolTip(0, 'f2 or double click to edit; arrow to unfold')
+        # self.setFlags(self.flags() | Qt.ItemIsEditable)
+        self.setToolTip(0, 'right click for options')
     
 
 class CategoryTree(QtWidgets.QTreeWidget):
@@ -24,7 +24,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
         self.main_window = main_window
         self.presenter = presenter
         self.setColumnCount(0)
-        self.setExpandsOnDoubleClick(False)
+        # self.setExpandsOnDoubleClick(False)
         self.setHeaderLabel('label 1')
         header = self.headerItem()
         header.setHidden(True)
@@ -52,14 +52,14 @@ class CategoryTree(QtWidgets.QTreeWidget):
         if type(self.itemAt(arg__1.pos())) == CategoryItem:
             self.menu = QtWidgets.QMenu(self)
 
+            add_action = self.menu.addAction('add')
+            add_action.triggered.connect(self.add_action_slot)
+
             edit_action = self.menu.addAction('edit')
             edit_action.triggered.connect(self.edit_action_slot)
 
             delete_action = self.menu.addAction('delete')
             delete_action.triggered.connect(self.delete_action_slot)
-
-            add_action = self.menu.addAction('add')
-            add_action.triggered.connect(self.add_action_slot)
 
             # add other required actions
             self.menu.exec(arg__1.globalPos())
@@ -79,13 +79,15 @@ class CategoryTree(QtWidgets.QTreeWidget):
         dlg = QtWidgets.QInputDialog(self)
         dlg.resize(200, 50)
         new_name, ok = dlg.getText(self, 'Редактирование', 'Введите новое название категории')
-        old_category = self.presenter.cat_repo.get_all({'name': old_cat_name})[0]
-        new_category = self.presenter.cat_class.copy(old_category)
-        new_category.name = new_name
-        print(new_category)
-        self.presenter.cat_repo.update(new_category)
-        self.main_window.init_cats()
+        if ok:
+            old_category = self.presenter.cat_repo.get_all({'name': old_cat_name})[0]
+            new_category = self.presenter.cat_class.copy(old_category)
+            new_category.name = new_name
+            print(new_category)
+            self.presenter.cat_repo.update(new_category)
+            self.main_window.init_cats()
     
+
     def add_action_slot(self):
         print('adding')
         if self.last_active_item:
@@ -95,38 +97,77 @@ class CategoryTree(QtWidgets.QTreeWidget):
         dlg = QtWidgets.QInputDialog(self)
         dlg.resize(200, 50)
         new_name, ok = dlg.getText(self, 'Добавление', 'Введите название новой категории')
-        if where_name:
-            parent_pk = self.presenter.cat_repo.get_all({'name': where_name})[0].pk
-        else:
-            parent_pk = None
-        new_category = self.presenter.cat_class(name=new_name, parent=parent_pk)
-        print(new_category)
-        self.presenter.cat_repo.add(new_category)
-        self.main_window.init_cats()
+        if ok:
+            if where_name:
+                parent_pk = self.presenter.cat_repo.get_all({'name': where_name})[0].pk
+            else:
+                parent_pk = None
+            new_category = self.presenter.cat_class(name=new_name, parent=parent_pk)
+            print(new_category)
+            self.presenter.cat_repo.add(new_category)
+            self.main_window.init_cats()
 
 
     def delete_action_slot(self):
         print('deleting')
-        dlg = QtWidgets.QMessageBox(self)
-        dlg.setWindowTitle("Удаление")
-        dlg.setText("Что делать с подкатегорями?")
-        delete_button = QtWidgets.QMessageBox.StandardButton.Discard
-        dlg.addButton(delete_button)
-        dlg.setButtonText(delete_button, 'Удалить')
+        where_name = self.last_active_item.text(0)
+        cat_obj = self.presenter.cat_repo.get_all({'name': where_name})[0]
+        has_children = cat_obj.get_children(self.presenter.cat_repo)
+        if has_children:
+            dlg = QtWidgets.QMessageBox(self)
+            dlg.setWindowTitle("Удаление")
+            dlg.setText("Что делать с подкатегорями?")
+            delete_button = QtWidgets.QMessageBox.StandardButton.Discard
+            dlg.addButton(delete_button)
+            dlg.setButtonText(delete_button, 'Удалить')
 
-        transfer_button = QtWidgets.QMessageBox.StandardButton.SaveAll
-        dlg.addButton(transfer_button)
-        dlg.setButtonText(transfer_button, 'Унаследовать')
+            transfer_button = QtWidgets.QMessageBox.StandardButton.SaveAll
+            dlg.addButton(transfer_button)
+            dlg.setButtonText(transfer_button, 'Наследовать')
 
-        cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
-        dlg.addButton(cancel_button)
-        dlg.setButtonText(cancel_button, 'Отмена')
-        dlg.setIcon(QtWidgets.QMessageBox.Question)
+            cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
+            dlg.addButton(cancel_button)
+            dlg.setButtonText(cancel_button, 'Отмена')
+            dlg.setIcon(QtWidgets.QMessageBox.Question)
+        else:
+            dlg = QtWidgets.QMessageBox(self)
+            dlg.setWindowTitle("Удаление")
+            dlg.setText("Вы уверены, что хотите удалить?")
+            delete_button = QtWidgets.QMessageBox.StandardButton.Discard
+            dlg.addButton(delete_button)
+            dlg.setButtonText(delete_button, 'Удалить')
+
+            cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
+            dlg.addButton(cancel_button)
+            dlg.setButtonText(cancel_button, 'Отмена')
+            dlg.setIcon(QtWidgets.QMessageBox.Question)
 
         res = dlg.exec()
 
         if res == delete_button:
-            pass
+            def delete_obj_in_tree(obj, repo):
+                children = obj.get_children(repo)
+                if children:
+                    for child in children:
+                        delete_obj_in_tree(child, repo)
+                repo.delete(obj.pk)
+                
+            
+            cat_obj = self.presenter.cat_repo.get_all({'name': where_name})[0]
+            delete_obj_in_tree(cat_obj, self.presenter.cat_repo)
+            self.main_window.init_cats()
+
+            
+        if res == transfer_button:
+
+            cat_obj = self.presenter.cat_repo.get_all({'name': where_name})[0]
+            parent_pk = cat_obj.parent
+            children_list = cat_obj.get_children(self.presenter.cat_repo)
+            for child in children_list:
+                child.parent = parent_pk
+                self.presenter.cat_repo.update(child)
+            self.presenter.cat_repo.delete(cat_obj.pk)
+            self.main_window.init_cats()
         print(res)
 
 
