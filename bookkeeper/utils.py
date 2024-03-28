@@ -344,6 +344,21 @@ class ExpenseTable(QtWidgets.QTableWidget):
 
     def add_entry(self, obj):
         print(obj)
+        self.itemChanged.disconnect(self.change_slot)
+        self.insertRow(0)
+        self.setItem(0, 0, QtWidgets.QTableWidgetItem(str(obj.pk)))
+        self.setItem(0, 1, QtWidgets.QTableWidgetItem(str(obj.expense_date)))
+        self.setItem(0, 2, QtWidgets.QTableWidgetItem(str(obj.amount)))
+        if obj.category != None:
+            self.setItem(0, 3, QtWidgets.QTableWidgetItem(str(obj.category)))
+        else:
+            self.setItem(0, 3, QtWidgets.QTableWidgetItem(''))
+        self.setItem(0, 4, QtWidgets.QTableWidgetItem(str(obj.comment)))
+        self.presenter.exp_repo.add(obj)
+        self.itemChanged.connect(self.change_slot)
+        self.update_table()
+
+
 
 def greeter(func):
     print('in decor')
