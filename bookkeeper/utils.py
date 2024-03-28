@@ -32,6 +32,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
         header.setHidden(True)
         viewport = self.viewport()
         viewport.installEventFilter(self)
+        self.init_cats()
         signal = self.itemDoubleClicked
     
 
@@ -46,7 +47,32 @@ class CategoryTree(QtWidgets.QTreeWidget):
     #             print("Middle")
 
     #     return super().eventFilter(obj, event)
-    
+
+    def init_cats(self):
+        self.clear()
+        cat_list = self.presenter.cat_repo.get_all()
+        root_cats = [cat for cat in cat_list if cat.parent == 0]
+        added = []
+        translator = {}
+        for cat in root_cats:
+            item = CategoryItem(self)
+            item.setText(0, cat.name)
+            added.append(cat.pk)
+            cat_list.remove(cat)
+            translator[cat.pk] = item
+
+        while True:
+            for cat in cat_list:
+                if cat.parent in added:
+                    item = CategoryItem(translator[cat.parent])
+                    item.setText(0, cat.name)
+                    added.append(cat.pk)
+                    cat_list.remove(cat)
+                    translator[cat.pk] = item
+            if cat_list == []:
+                break
+        self.presenter.cat_item_dic = translator
+
 
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
         print(type(self.itemAt(arg__1.pos())))
@@ -359,6 +385,40 @@ class ExpenseTable(QtWidgets.QTableWidget):
         self.update_table()
 
 
+class CategoryDialog(QtWidgets.QDialog):
+            
+    def __init__(self, parent: QtWidgets.QWidget | None, presenter: Bookkeeper) -> None:
+        super().__init__(parent)
+        self.presenter = presenter
+        self.my_parent = parent
+
+        self.resize(400, 500)
+        self.setWindowTitle('Выбор категории')
+        layout = QtWidgets.QVBoxLayout()
+
+        self.category_tree = CategoryTree(self, self.presenter)
+        layout.addWidget(self.category_tree)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        accept_button = QtWidgets.QPushButton('Выбрать')
+        
+        accept_button.clicked.connect(self.accept_slot)
+        reject_button = QtWidgets.QPushButton('Отмена')
+        reject_button.clicked.connect(self.reject)
+        button_layout.addWidget(accept_button)
+        button_layout.addWidget(reject_button)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+
+    def accept_slot(self):
+        selected_name = self.category_tree.currentItem().text(0)
+        print(selected_name)
+        self.presenter.chosen_category = selected_name
+        self.my_parent.chosen_category_label.setText(selected_name)
+        self.accept()
+
 
 def greeter(func):
     print('in decor')
@@ -380,34 +440,7 @@ class MyWindow(QtWidgets.QWidget):
         self.budget_table = BudgetTable(self, presenter)
         self.expenses_table = ExpenseTable(self, presenter)
         self.init_ui()
-        self.init_cats()
         self.budget_table.initiated = True
-
-
-    def init_cats(self):
-        self.treeWidget.clear()
-        cat_list = self.presenter.cat_repo.get_all()
-        root_cats = [cat for cat in cat_list if cat.parent == 0]
-        added = []
-        translator = {}
-        for cat in root_cats:
-            item = CategoryItem(self.treeWidget)
-            item.setText(0, cat.name)
-            added.append(cat.pk)
-            cat_list.remove(cat)
-            translator[cat.pk] = item
-
-        while True:
-            for cat in cat_list:
-                if cat.parent in added:
-                    item = CategoryItem(translator[cat.parent])
-                    item.setText(0, cat.name)
-                    added.append(cat.pk)
-                    cat_list.remove(cat)
-                    translator[cat.pk] = item
-            if cat_list == []:
-                break
-        self.presenter.cat_item_dic = translator
 
         
     # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -439,7 +472,7 @@ class MyWindow(QtWidgets.QWidget):
 
         self.add_edit_layout()
 
-        self.general_layout.addWidget(self.treeWidget)
+        # self.general_layout.addWidget(self.treeWidget)
         self.setLayout(self.general_layout)
 
 
@@ -454,9 +487,21 @@ class MyWindow(QtWidgets.QWidget):
         self.edit_sum_line = QtWidgets.QLineEdit()
         edit_layout.addWidget(self.edit_sum_line, 1, 1)
 
-        edit_layout.addWidget(QtWidgets.QLabel('Категория'), 2, 0)
+        category_labels_layout = QtWidgets.QVBoxLayout()
+        category_labels_layout.addWidget(QtWidgets.QLabel('Категория'))
+        self.chosen_category_label = QtWidgets.QLabel('')
+        category_labels_layout.addWidget(self.chosen_category_label)
+        edit_layout.addLayout(category_labels_layout, 2, 0)
+
+        category_buttons_layout = QtWidgets.QHBoxLayout()
         self.choose_category_button = QtWidgets.QPushButton('Выбрать категорию')
-        edit_layout.addWidget(self.choose_category_button, 2, 1)
+        category_buttons_layout.addWidget(self.choose_category_button)
+        self.choose_category_button.clicked.connect(self.choose_category_slot)
+
+        self.edit_category_button = QtWidgets.QPushButton('Редактировать категории')
+        category_buttons_layout.addWidget(self.edit_category_button)
+        edit_layout.addLayout(category_buttons_layout, 2, 1)
+        self.edit_category_button.clicked.connect(self.edit_category_slot)
 
         edit_layout.addWidget(QtWidgets.QLabel('Комментарий'), 3, 0)
         self.edit_comment_line = QtWidgets.QTextEdit()
@@ -471,15 +516,25 @@ class MyWindow(QtWidgets.QWidget):
 
     
     def on_clicked(self):
-        expense_date = self.presenter.exp_class.MyDate(self.edit_date_line.text())
         amount = int(self.edit_sum_line.text())
+        expense_date = self.presenter.exp_class.MyDate(self.edit_date_line.text())
+        category = self.presenter.cat_repo.get_all({'name': self.presenter.chosen_category})[0].pk
         comment = self.edit_comment_line.toPlainText()
-        obj = self.presenter.exp_class(expense_date=expense_date,
-                                       amount=amount,
+        obj = self.presenter.exp_class(amount=amount,
+                                       expense_date=expense_date,
+                                       category=category,
                                        comment=comment)
+
+        print(obj)
         self.expenses_table.add_entry(obj)
 
 
+    def choose_category_slot(self):
+        dlg = CategoryDialog(self, self.presenter)
+        res = dlg.exec()
+
+    def edit_category_slot(self):
+        pass
 cat_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', category.Category)
 budget_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', budget.Budget)
 expense_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', expense.Expense)
