@@ -20,9 +20,10 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
     cat_signal = QtCore.Signal(CategoryItem)
 
-    def __init__(self, main_window: 'MyWindow', presenter: Bookkeeper):
+    def __init__(self, main_window: 'MyWindow', presenter: Bookkeeper, editable: bool):
         super().__init__()
 
+        self.editable = editable
         self.main_window = main_window
         self.presenter = presenter
         self.setColumnCount(0)
@@ -76,29 +77,30 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
         print(type(self.itemAt(arg__1.pos())))
-        self.last_active_item = self.itemAt(arg__1.pos())
-        if type(self.itemAt(arg__1.pos())) == CategoryItem:
-            self.menu = QtWidgets.QMenu(self)
+        if self.editable:
+            self.last_active_item = self.itemAt(arg__1.pos())
+            if type(self.itemAt(arg__1.pos())) == CategoryItem:
+                self.menu = QtWidgets.QMenu(self)
 
-            add_action = self.menu.addAction('add')
-            add_action.triggered.connect(self.add_action_slot)
+                add_action = self.menu.addAction('add')
+                add_action.triggered.connect(self.add_action_slot)
 
-            edit_action = self.menu.addAction('edit')
-            edit_action.triggered.connect(self.edit_action_slot)
+                edit_action = self.menu.addAction('edit')
+                edit_action.triggered.connect(self.edit_action_slot)
 
-            delete_action = self.menu.addAction('delete')
-            delete_action.triggered.connect(self.delete_action_slot)
+                delete_action = self.menu.addAction('delete')
+                delete_action.triggered.connect(self.delete_action_slot)
 
-            # add other required actions
-            self.menu.exec(arg__1.globalPos())
-            return super().contextMenuEvent(arg__1)
-        else:
-            self.menu = QtWidgets.QMenu(self)
-            add_action = self.menu.addAction('add')
-            add_action.triggered.connect(self.add_action_slot)
-            # add other required actions
-            self.menu.exec(arg__1.globalPos())
-            return super().contextMenuEvent(arg__1)
+                # add other required actions
+                self.menu.exec(arg__1.globalPos())
+                return super().contextMenuEvent(arg__1)
+            else:
+                self.menu = QtWidgets.QMenu(self)
+                add_action = self.menu.addAction('add')
+                add_action.triggered.connect(self.add_action_slot)
+                # add other required actions
+                self.menu.exec(arg__1.globalPos())
+                return super().contextMenuEvent(arg__1)
     
 
     def edit_action_slot(self):
@@ -113,7 +115,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
             new_category.name = new_name
             print(new_category)
             self.presenter.cat_repo.update(new_category)
-            self.main_window.init_cats()
+            # self.main_window.init_cats()
+            self.init_cats()
     
 
     def add_action_slot(self):
@@ -133,7 +136,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
             new_category = self.presenter.cat_class(name=new_name, parent=parent_pk)
             print(new_category)
             self.presenter.cat_repo.add(new_category)
-            self.main_window.init_cats()
+            # self.main_window.init_cats()
+            self.init_cats()
 
 
     def delete_action_slot(self):
@@ -183,7 +187,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
             
             cat_obj = self.presenter.cat_repo.get_all({'name': where_name})[0]
             delete_obj_in_tree(cat_obj, self.presenter.cat_repo)
-            self.main_window.init_cats()
+            # self.main_window.init_cats()
+            self.init_cats()
 
             
         if res == transfer_button:
@@ -195,7 +200,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
                 child.parent = parent_pk
                 self.presenter.cat_repo.update(child)
             self.presenter.cat_repo.delete(cat_obj.pk)
-            self.main_window.init_cats()
+            # self.main_window.init_cats()
+            self.init_cats()
         print(res)
 
 
@@ -396,7 +402,7 @@ class CategoryDialog(QtWidgets.QDialog):
         self.setWindowTitle('Выбор категории')
         layout = QtWidgets.QVBoxLayout()
 
-        self.category_tree = CategoryTree(self, self.presenter)
+        self.category_tree = CategoryTree(self, self.presenter, False)
         layout.addWidget(self.category_tree)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -420,6 +426,30 @@ class CategoryDialog(QtWidgets.QDialog):
         self.accept()
 
 
+class CategoryDialogEdit(QtWidgets.QDialog):
+            
+    def __init__(self, parent: QtWidgets.QWidget | None, presenter: Bookkeeper) -> None:
+        super().__init__(parent)
+        self.presenter = presenter
+        self.my_parent = parent
+
+        self.resize(400, 500)
+        self.setWindowTitle('Выбор категории')
+        layout = QtWidgets.QVBoxLayout()
+
+        self.category_tree = CategoryTree(parent, self.presenter, True)
+        layout.addWidget(self.category_tree)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        end_button = QtWidgets.QPushButton('Закрыть')
+        
+        end_button.clicked.connect(self.accept)
+        button_layout.addWidget(end_button)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+
 def greeter(func):
     print('in decor')
     def new_func(*args, **keyargs):
@@ -436,7 +466,7 @@ class MyWindow(QtWidgets.QWidget):
         super().__init__()
 
         self.presenter = presenter
-        self.treeWidget = CategoryTree(self, presenter)
+        # self.treeWidget = CategoryTree(self, presenter, True)
         self.budget_table = BudgetTable(self, presenter)
         self.expenses_table = ExpenseTable(self, presenter)
         self.init_ui()
@@ -534,7 +564,10 @@ class MyWindow(QtWidgets.QWidget):
         res = dlg.exec()
 
     def edit_category_slot(self):
-        pass
+        dlg = CategoryDialogEdit(self, self.presenter)
+        res = dlg.exec()
+
+
 cat_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', category.Category)
 budget_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', budget.Budget)
 expense_repo = sqlite_repository.SQLiteRepository('D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db', expense.Expense)
