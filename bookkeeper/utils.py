@@ -5,7 +5,8 @@ import random
 from presenter import Bookkeeper
 from models import budget, category, expense
 from repository import sqlite_repository
-from datetime import date
+from datetime import date, timedelta
+
 
 class CategoryItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, *args, **kwargs):
@@ -13,7 +14,6 @@ class CategoryItem(QtWidgets.QTreeWidgetItem):
         # self.setFlags(self.flags() | Qt.ItemIsEditable)
         self.setToolTip(0, 'right click for options')
     
-
 
 #Хорошо бы здесь все сделать по ключу, а не по имени
 class CategoryTree(QtWidgets.QTreeWidget):
@@ -215,8 +215,10 @@ class BudgetTable(QtWidgets.QTableWidget):
 
     def __init__(self, parent: QtWidgets.QWidget, presenter: Bookkeeper):
         super().__init__(parent)
+
         self.presenter = presenter
         self.initiated = False
+        self.presenter.budget_table = self
 
         self.setColumnCount(2)
         self.setRowCount(3)
@@ -230,7 +232,8 @@ class BudgetTable(QtWidgets.QTableWidget):
         self.setItem(0, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'День'})[0].amount)))
         self.setItem(1, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount)))
         self.setItem(2, 1, QtWidgets.QTableWidgetItem(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount)))
-        self.itemChanged.connect(self.edit_slot)
+
+        self.count_expenses()
      
 
     def edit_slot(self, item: QtWidgets.QTableWidgetItem):
@@ -257,9 +260,36 @@ class BudgetTable(QtWidgets.QTableWidget):
         self.item(1, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Неделя'})[0].amount))
         self.item(2, 1).setText(str(self.presenter.bud_repo.get_all({'time_period': 'Месяц'})[0].amount))
 
-    def count_expenses(self):
-        pass
 
+    def count_expenses(self):
+        today = date.today()
+        day_delta = timedelta(days=1)
+
+        day_expense = 0
+        entries = self.presenter.exp_repo.get_all(where={'expense_date': str(today)})
+        for entry in entries:
+            day_expense += entry.amount
+
+        week_expense = 0
+        for num_days in range(30):
+            day = today - num_days*day_delta
+            entries = self.presenter.exp_repo.get_all(where={'expense_date': str(day)})
+            for entry in entries:
+                week_expense += entry.amount
+
+        month_expense = 0
+        for num_days in range(365):
+            day = today - num_days*day_delta
+            entries = self.presenter.exp_repo.get_all(where={'expense_date': str(day)})
+            for entry in entries:
+                month_expense += entry.amount
+        
+        expenses = [day_expense, week_expense, month_expense]
+        for i, expense in enumerate(expenses):
+            self.setItem(i, 0, QtWidgets.QTableWidgetItem(str(expense)))
+            flags = self.item(i, 0).flags()
+            self.item(i, 0).setFlags(flags & ~Qt.ItemFlag.ItemIsEditable)
+        
 
 class ExpenseTable(QtWidgets.QTableWidget):
     def __init__(self, parent: QtWidgets.QWidget, presenter: Bookkeeper):
@@ -307,7 +337,9 @@ class ExpenseTable(QtWidgets.QTableWidget):
 
         self.sortByColumn(1, QtCore.Qt.SortOrder.DescendingOrder)
         print(self.parent())
+        self.presenter.budget_table.count_expenses()
         self.itemChanged.connect(self.change_slot)
+
 
     def change_slot(self, item: QtWidgets.QTableWidgetItem):
         row = item.row()
@@ -450,12 +482,12 @@ class CategoryDialogEdit(QtWidgets.QDialog):
         self.setLayout(layout)
 
 
-def greeter(func):
-    print('in decor')
-    def new_func(*args, **keyargs):
-        print('in event')
-        return func(*args, **keyargs)
-    return new_func
+# def greeter(func):
+#     print('in decor')
+#     def new_func(*args, **keyargs):
+#         print('in event')
+#         return func(*args, **keyargs)
+#     return new_func
 
 
 class MyWindow(QtWidgets.QWidget):
@@ -562,6 +594,7 @@ class MyWindow(QtWidgets.QWidget):
     def choose_category_slot(self):
         dlg = CategoryDialog(self, self.presenter)
         res = dlg.exec()
+
 
     def edit_category_slot(self):
         dlg = CategoryDialogEdit(self, self.presenter)
