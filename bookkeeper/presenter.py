@@ -7,6 +7,7 @@ from PySide6 import QtWidgets
 import sys
 from view.view import MyWindow
 
+
 class Presenter:
     def __init__(self, cat_repo: AbstractRepository, bud_repo: AbstractRepository, exp_repo: AbstractRepository,
                  cat_class: Category, budget_class: Budget, exp_class: Expense, view: QtWidgets.QWidget) -> None:
@@ -25,7 +26,7 @@ class Presenter:
 
         self.view.register_exp_add(self.add_expense)
         self.view.register_exp_delete(self.delete_expense)
-
+        self.view.register_exp_update(self.update_expense)
         self.update_expenses()
 
 
@@ -42,6 +43,12 @@ class Presenter:
         self.exp_repo.delete(pk=pk)
         self.update_expenses()
 
+
+    def change_expense(self, attr_dict):
+        attr_val_dict = {}
+        for item in attr_dict.items():
+            attr_name = self.tranlator[attr]
+            attr_value = 
 
     def update_expenses(self):
         expenses = self.exp_repo.get_all()

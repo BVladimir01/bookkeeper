@@ -48,14 +48,33 @@ class ExpenseTable(QtWidgets.QTableWidget):
         self.itemChanged.connect(self.change_slot)
 
 
+    def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
+        print(type(self.itemAt(arg__1.pos())))
+        self.last_active_item = self.itemAt(arg__1.pos())
+        if type(self.itemAt(arg__1.pos())) == QtWidgets.QTableWidgetItem:
+            self.menu = QtWidgets.QMenu(self)
+
+            delete_action = self.menu.addAction('delete entry')
+            delete_action.triggered.connect(self.delete_action_slot)
+
+            # add other required actions
+            self.menu.exec(arg__1.globalPos())
+            return super().contextMenuEvent(arg__1)
+        else:
+            pass    
+
+
+    def register_change(self, handler):
+        self.change_func = handler
+
+
     def change_slot(self, item: QtWidgets.QTableWidgetItem):
-        pass
+        # pass
         # row = item.row()
         # pk = int(self.item(row, 0).text())
         # old_obj = self.presenter.exp_repo.get(pk)
         # attr_name = self.cols[item.column()]
         # attr_type = old_obj.__annotations__[attr_name]
-
         # if attr_name == 'expense_date':
         #     old_obj.expense_date = date.fromisoformat(item.text())
         # elif attr_name == 'amount':
@@ -70,23 +89,11 @@ class ExpenseTable(QtWidgets.QTableWidget):
         # print(old_obj)
         # self.presenter.exp_repo.update(old_obj)
         # self.update_table()
-
-
-    def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
-        print(type(self.itemAt(arg__1.pos())))
-        self.last_active_item = self.itemAt(arg__1.pos())
-        if type(self.itemAt(arg__1.pos())) == QtWidgets.QTableWidgetItem:
-            self.menu = QtWidgets.QMenu(self)
-
-            delete_action = self.menu.addAction('delete entry')
-            delete_action.triggered.connect(self.delete_action_slot)
-
-            # add other required actions
-            self.menu.exec(arg__1.globalPos())
-            return super().contextMenuEvent(arg__1)
-        else:
-            pass
+        attr_val_dict = { header_name: self.item(item.row, i).text()
+                         for (i, header_name) in enumerate(self.horizontalHeader)}
+        self.change_func(attr_val_dict)
     
+
     def register_delete(self, handler):
         self.delete_func = handler
 
@@ -112,7 +119,7 @@ class ExpenseTable(QtWidgets.QTableWidget):
             pk = int(self.item(row, 0).text())
             print(pk)
             self.delete_func(pk)
-            self.update_table()
+            self.update_expenses()
         
 
     def add_entry(self, obj):

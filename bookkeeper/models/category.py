@@ -15,6 +15,13 @@ class Category:
     name: str = ''
     parent: int = 0
 
+
+    def __post_init__(self):
+        for attr_name, attr_type in self.__annotations__.items():
+            value = getattr(self, attr_name)
+            if type(value) != attr_type:
+                setattr(self, attr_name, attr_type(value))   
+     
     def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
         """return parent object from repository"""
         if self.parent == 0:
@@ -28,3 +35,8 @@ class Category:
     @classmethod
     def copy(cls, obj):
         return cls(obj.pk, obj.name, obj.parent)
+    
+
+if __name__ == '__main__':
+    test_obj = Category(pk='1', name='name', parent='12')
+    print(test_obj)
