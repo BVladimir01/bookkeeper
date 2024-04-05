@@ -7,6 +7,7 @@ from PySide6 import QtWidgets
 import sys
 from view.view import MyWindow
 
+from datetime import date, timedelta
 
 class Presenter:
     def __init__(self, cat_repo: AbstractRepository, bud_repo: AbstractRepository, exp_repo: AbstractRepository,
@@ -27,8 +28,11 @@ class Presenter:
         self.view.register_exp_add(self.add_expense)
         self.view.register_exp_delete(self.delete_expense)
         self.view.register_exp_change(self.change_expense)
+        self.view.register_exp_category_change(self.change_expense_category)
         self.update_expenses()
 
+        self.count_expenses()
+        self.update_budgets()
 
     def add_expense(self, expense_date, amount, category, comment, added_date = None):
         if added_date:
@@ -50,6 +54,10 @@ class Presenter:
         self.update_expenses()
 
 
+    def change_expense_category(self, *args):
+        print('changing category in presenter')
+
+
     def update_expenses(self):
         expenses = self.exp_repo.get_all()
         categories = []
@@ -57,6 +65,39 @@ class Presenter:
             cat_pk = exp.category
             categories.append(self.cat_repo.get(cat_pk))
         self.view.update_expenses(expenses, categories)
+
+
+    def count_expenses(self):
+        expenses = []
+        today = date.today()
+        day_delta = timedelta(days=1)
+        for num_days in range(30):
+            day = today - num_days*day_delta
+            entries = self.exp_repo.get_all(where={'expense_date': str(day)})
+            expenses = expenses + entries
+        
+        day_expense = 0
+        for expense in expenses:
+            if expense.expense_date <= today - day_delta: break
+            day_expense += expense.amount
+
+
+        week_expense = 0
+        for expense in expenses:
+            if expense.expense_date <= today - 7*day_delta: break
+            week_expense += expense.amount
+
+        month_expense = sum(map(lambda x: getattr(x, 'amount'), expenses))
+
+        self.view.display_expenses((day_expense, week_expense, month_expense))
+    
+
+    def update_budgets(self):
+        day = self.bud_repo.get_all(where={'time_period': 'День'})[0]
+        week = self.bud_repo.get_all(where={'time_period': 'Неделя'})[0]
+        month = self.bud_repo.get_all(where={'time_period': 'Месяц'})[0]
+        self.view.update_budgets((day, week, month))
+
 
 
 class Bookkeeper:

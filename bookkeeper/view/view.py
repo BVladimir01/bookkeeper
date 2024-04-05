@@ -56,13 +56,17 @@ class ExpenseTable(QtWidgets.QTableWidget):
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
         print(type(self.itemAt(arg__1.pos())))
         self.last_active_item = self.itemAt(arg__1.pos())
-        if type(self.itemAt(arg__1.pos())) == QtWidgets.QTableWidgetItem:
+        active_item = self.last_active_item
+        if type(active_item) == QtWidgets.QTableWidgetItem:
             self.menu = QtWidgets.QMenu(self)
 
             delete_action = self.menu.addAction('delete entry')
-            delete_action.triggered.connect(self.delete_action_slot)
+            delete_action.triggered.connect(self.delete_slot)
 
-            # add other required actions
+            if active_item.column() == 4:
+                change_category = self.menu.addAction('Change_category')
+                change_category.triggered.connect(self.change_category_slot)
+            
             self.menu.exec(arg__1.globalPos())
             return super().contextMenuEvent(arg__1)
         else:
@@ -86,7 +90,7 @@ class ExpenseTable(QtWidgets.QTableWidget):
         self.delete_func = handler
 
 
-    def delete_action_slot(self, action):
+    def delete_slot(self, action):
         delete_button = QtWidgets.QMessageBox.StandardButton.Discard
         cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
 
@@ -109,6 +113,15 @@ class ExpenseTable(QtWidgets.QTableWidget):
             self.delete_func(pk)
         
 
+    def register_exp_category_change(self, handler):
+        self.exp_category_change_func = handler
+
+
+    def change_category_slot(self, action):
+        print('changing category in view')
+        self.exp_category_change_func()
+
+
     def add_entry(self, obj):
         print(obj)
         self.itemChanged.disconnect(self.change_slot)
@@ -126,12 +139,65 @@ class ExpenseTable(QtWidgets.QTableWidget):
         self.update_table()
 
 
+class BudgetTable(QtWidgets.QTableWidget):
+
+    def __init__(self, parent: QtWidgets.QWidget):
+        super().__init__(parent)
+
+        self.initiated = False
+
+        self.setColumnCount(3)
+        self.setRowCount(3)
+        self.setHorizontalHeaderLabels(('Сумма', 'pk', 'Бюджет'))
+        self.setVerticalHeaderLabels(('День', 'Неделя', 'Месяц'))
+        hor_header = self.horizontalHeader()
+        hor_header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        hor_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.setFixedHeight(116)
+        
+        # self.hideColumn(1)
+
+
+    def edit_slot(self, item: QtWidgets.QTableWidgetItem):
+        # if item.column() == 1:
+        #     if self.initiated:
+        #         try:
+        #             new_amount = item.text()
+        #             print('editing budget')
+        #             header = self.verticalHeaderItem(item.row()).text()
+        #             print(header)
+        #             old_obj = self.presenter.bud_repo.get_all({'time_period': header})[0]
+        #             old_obj.amount = int(new_amount)
+        #             self.presenter.bud_repo.update(old_obj)
+        #         except ValueError:
+        #             print('enter correct budget')
+        #             input()
+        #             self.update_table()
+        # if item.column() == 0:
+            pass
+
+
+    def update_budgets(self, budgets):
+        
+        for i in range(3):
+            self.setItem(i, 1, QtWidgets.QTableWidgetItem(str(budgets[i].pk)))
+            self.setItem(i, 2, QtWidgets.QTableWidgetItem(str(budgets[i].amount)))
+
+
+    def display_expenses(self, expenses):
+        for i, expense in enumerate(expenses):
+            self.setItem(i, 0, QtWidgets.QTableWidgetItem(str(expense)))
+            flags = self.item(i, 0).flags()
+            self.item(i, 0).setFlags(flags & ~Qt.ItemFlag.ItemIsEditable)
+
+
 class MyWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
 
         self.expenses_table = ExpenseTable(self)
+        self.budget_table = BudgetTable(self)
         self.init_ui()
 
         self.setWindowTitle('The Bookkeeper app')
@@ -143,6 +209,9 @@ class MyWindow(QtWidgets.QWidget):
 
         self.general_layout.addWidget(QtWidgets.QLabel('Записи'))
         self.general_layout.addWidget(self.expenses_table)
+
+        self.general_layout.addWidget(QtWidgets.QLabel('Бюджет'))
+        self.general_layout.addWidget(self.budget_table)
 
         self.setLayout(self.general_layout)
 
@@ -161,6 +230,16 @@ class MyWindow(QtWidgets.QWidget):
 
     def register_exp_change(self, handler):
         self.expenses_table.register_change(handler)
+
+
+    def register_exp_category_change(self, handler):
+        self.expenses_table.register_exp_category_change(handler)
+
+    def display_expenses(self, expenses):
+        self.budget_table.display_expenses(expenses)
+
+    def update_budgets(self, budgets):
+        self.budget_table.update_budgets(budgets)
 
 
 if __name__ == '__main__':
