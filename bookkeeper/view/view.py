@@ -7,42 +7,47 @@ class ExpenseTable(QtWidgets.QTableWidget):
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
 
-        self.setColumnCount(5)
+        self.setColumnCount(6)
         self.setRowCount(0)
 
-        self.setHorizontalHeaderLabels("pk Дата Сумма Категория Комментарий".split())
+        self.setHorizontalHeaderLabels("pk Дата Сумма category Категория Комментарий".split())
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
-        self.hideColumn(0)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Stretch)
+        # self.hideColumn(0)
+        # self.hideColumn(3)
 
         self.verticalHeader().hide()
         self.itemChanged.connect(self.change_slot)
-        # self.cols = ['pk', 'expense_date', 'amount', 'category', 'comment']
 
-        # self.tranlator = {i:j for i, j in zip("pk Дата Сумма Категория Комментарий".split(), self.cols)}
-
-        # self.itemChanged.connect(self.change_slot)
-        # self.update_table()
+        self.headers = "pk Дата Сумма category Категория Комментарий".split()
+        self.attr_headers = ['pk', 'expense_date', 'amount', 'category', 'comment']
+        self.tranlator = {i:j for i, j in zip("pk Дата Сумма category Комментарий".split(), self.attr_headers)}
 
 
-    def update_expenses(self, expenses: list, categories: list, headers: list, translator):
+    def update_expenses(self, expenses: list, categories: list):
+        headers = self.headers
+        translator = self.tranlator
         self.itemChanged.disconnect(self.change_slot)
-        self.clearContents()
-        for k, expense in enumerate(expenses):
+        for j in range(self.rowCount()):
+            self.removeRow(0)
+    
+        for k in range(len(expenses)):
             self.insertRow(0)
-            cat = categories[k]
-            for i, attr in enumerate(headers):
-                text = str(getattr(expense, attr))
-                if text != 'None':
-                    if attr == 'category':
-                        text = str(cat.name)
-                    self.setItem(0, i, QtWidgets.QTableWidgetItem(text))
+            expense = expenses[k]
+            category = categories[k]
+            for i, header in enumerate(headers):
+                if header == 'Категория':
+                    text = str(category.name)
                 else:
-                    self.setItem(0, i, QtWidgets.QTableWidgetItem(''))
+                    attr_name = translator[header]
+                    text = str(getattr(expense, attr_name))
+                self.setItem(0, i, QtWidgets.QTableWidgetItem(text))
+                pass
 
         self.sortByColumn(1, QtCore.Qt.SortOrder.DescendingOrder)
         self.itemChanged.connect(self.change_slot)
@@ -69,28 +74,11 @@ class ExpenseTable(QtWidgets.QTableWidget):
 
 
     def change_slot(self, item: QtWidgets.QTableWidgetItem):
-        # pass
-        # row = item.row()
-        # pk = int(self.item(row, 0).text())
-        # old_obj = self.presenter.exp_repo.get(pk)
-        # attr_name = self.cols[item.column()]
-        # attr_type = old_obj.__annotations__[attr_name]
-        # if attr_name == 'expense_date':
-        #     old_obj.expense_date = date.fromisoformat(item.text())
-        # elif attr_name == 'amount':
-        #     old_obj.amount = int(item.text())
-        # elif attr_name == 'category':
-        #     cat_obj = self.presenter.cat_repo.get_all({'name': item.text()})[0]
-        #     old_obj.category = cat_obj.pk
-        # elif attr_name == 'comment':
-        #     old_obj.comment = item.text()
-
-        # print('changing')
-        # print(old_obj)
-        # self.presenter.exp_repo.update(old_obj)
-        # self.update_table()
-        attr_val_dict = { header_name: self.item(item.row, i).text()
-                         for (i, header_name) in enumerate(self.horizontalHeader)}
+        attr_val_dict = {}
+        for i in range(len(self.headers)):
+            header = self.headers[i]
+            attr_name = self.tranlator.get(header)
+            if attr_name: attr_val_dict[attr_name] = self.item(item.row(), i).text()
         self.change_func(attr_val_dict)
     
 
@@ -119,7 +107,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
             pk = int(self.item(row, 0).text())
             print(pk)
             self.delete_func(pk)
-            self.update_expenses()
         
 
     def add_entry(self, obj):
@@ -168,8 +155,12 @@ class MyWindow(QtWidgets.QWidget):
         self.expenses_table.register_delete(handler)
 
     
-    def update_expenses(self, expenses, categories, headers, tranlator):
-        self.expenses_table.update_expenses(expenses, categories, headers, tranlator)
+    def update_expenses(self, expenses, categories):
+        self.expenses_table.update_expenses(expenses, categories)
+
+
+    def register_exp_change(self, handler):
+        self.expenses_table.register_change(handler)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ class Presenter:
         
 
         self.col_headers = ['pk', 'expense_date', 'amount', 'category', 'comment']
-        self.tranlator = {i:j for i, j in zip("pk Дата Сумма Категория Комментарий".split(), self.col_headers)}
+        self.tranlator = {i:j for i, j in zip("pk Дата Сумма category Комментарий".split(), self.col_headers)}
     
         self.cat_class = cat_class
         self.budget_class = budget_class
@@ -26,7 +26,7 @@ class Presenter:
 
         self.view.register_exp_add(self.add_expense)
         self.view.register_exp_delete(self.delete_expense)
-        self.view.register_exp_update(self.update_expense)
+        self.view.register_exp_change(self.change_expense)
         self.update_expenses()
 
 
@@ -44,11 +44,11 @@ class Presenter:
         self.update_expenses()
 
 
-    def change_expense(self, attr_dict):
-        attr_val_dict = {}
-        for item in attr_dict.items():
-            attr_name = self.tranlator[attr]
-            attr_value = 
+    def change_expense(self, attr_val_dict):
+        new_obj = self.exp_class(**attr_val_dict)
+        self.exp_repo.update(new_obj)
+        self.update_expenses()
+
 
     def update_expenses(self):
         expenses = self.exp_repo.get_all()
@@ -56,7 +56,7 @@ class Presenter:
         for exp in expenses:
             cat_pk = exp.category
             categories.append(self.cat_repo.get(cat_pk))
-        self.view.update_expenses(expenses, categories, self.col_headers, self.tranlator)
+        self.view.update_expenses(expenses, categories)
 
 
 class Bookkeeper:

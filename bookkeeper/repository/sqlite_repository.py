@@ -1,6 +1,6 @@
 from inspect import get_annotations
 from typing import Any, Dict, List
-from bookkeeper.repository.abstract_repository import AbstractRepository, T
+from repository.abstract_repository import AbstractRepository, T
 import sqlite3
 
 class SQLiteRepository(AbstractRepository[T]):
