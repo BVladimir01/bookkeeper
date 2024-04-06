@@ -31,8 +31,10 @@ class Presenter:
         self.view.register_exp_category_change(self.change_expense_category)
         self.update_expenses()
 
+        self.view.register_budget_change(self.change_budget)
         self.count_expenses()
         self.update_budgets()
+        
 
     def add_expense(self, expense_date, amount, category, comment, added_date = None):
         if added_date:
@@ -65,6 +67,7 @@ class Presenter:
             cat_pk = exp.category
             categories.append(self.cat_repo.get(cat_pk))
         self.view.update_expenses(expenses, categories)
+        self.count_expenses()
 
 
     def count_expenses(self):
@@ -98,6 +101,11 @@ class Presenter:
         month = self.bud_repo.get_all(where={'time_period': 'Месяц'})[0]
         self.view.update_budgets((day, week, month))
 
+
+    def change_budget(self, attr_val_dict):
+        new_obj = self.budget_class(**attr_val_dict)
+        self.bud_repo.update(new_obj)
+        self.update_budgets()
 
 
 class Bookkeeper:

@@ -157,38 +157,51 @@ class BudgetTable(QtWidgets.QTableWidget):
         
         # self.hideColumn(1)
 
+        self.itemChanged.connect(self.change_slot)
 
-    def edit_slot(self, item: QtWidgets.QTableWidgetItem):
-        # if item.column() == 1:
-        #     if self.initiated:
-        #         try:
-        #             new_amount = item.text()
-        #             print('editing budget')
-        #             header = self.verticalHeaderItem(item.row()).text()
-        #             print(header)
-        #             old_obj = self.presenter.bud_repo.get_all({'time_period': header})[0]
-        #             old_obj.amount = int(new_amount)
-        #             self.presenter.bud_repo.update(old_obj)
-        #         except ValueError:
-        #             print('enter correct budget')
-        #             input()
-        #             self.update_table()
-        # if item.column() == 0:
-            pass
+
+
+    # def slot(self, item):
+    #     print('lmao')
+
+    def register_budget_change(self, handler):
+        self.change_budget = handler
+
+
+    def change_slot(self, item: QtWidgets.QTableWidgetItem):
+        if self.initiated:
+            if item.column() == 2:
+                attr_val_dict = {}
+                try:
+                    new_amount = item.text()
+                    attr_val_dict['amount'] = new_amount
+                    header = self.verticalHeaderItem(item.row()).text()
+                    attr_val_dict['time_period'] = header
+                    pk = self.item(item.row(), 1).text()
+                    attr_val_dict['pk'] = pk
+                    self.change_budget(attr_val_dict)
+                except ValueError:
+                    print('enter correct budget')
+                    input()
 
 
     def update_budgets(self, budgets):
-        
+        self.itemChanged.disconnect(self.change_slot)
         for i in range(3):
             self.setItem(i, 1, QtWidgets.QTableWidgetItem(str(budgets[i].pk)))
             self.setItem(i, 2, QtWidgets.QTableWidgetItem(str(budgets[i].amount)))
+        
+        self.initiated = True
+        self.itemChanged.connect(self.change_slot)
 
 
     def display_expenses(self, expenses):
+        self.itemChanged.disconnect(self.change_slot)
         for i, expense in enumerate(expenses):
             self.setItem(i, 0, QtWidgets.QTableWidgetItem(str(expense)))
             flags = self.item(i, 0).flags()
             self.item(i, 0).setFlags(flags & ~Qt.ItemFlag.ItemIsEditable)
+        self.itemChanged.connect(self.change_slot)
 
 
 class MyWindow(QtWidgets.QWidget):
@@ -227,7 +240,6 @@ class MyWindow(QtWidgets.QWidget):
     def update_expenses(self, expenses, categories):
         self.expenses_table.update_expenses(expenses, categories)
 
-
     def register_exp_change(self, handler):
         self.expenses_table.register_change(handler)
 
@@ -240,6 +252,9 @@ class MyWindow(QtWidgets.QWidget):
 
     def update_budgets(self, budgets):
         self.budget_table.update_budgets(budgets)
+
+    def register_budget_change(self, handler):
+        self.budget_table.register_budget_change(handler)
 
 
 if __name__ == '__main__':
