@@ -13,7 +13,7 @@ class Expense:
     """
     pk: int = 0
     amount: int = None
-    category: int = None
+    category: int = 0
     expense_date: date = date.today()
     added_date:  date = date.today()
     comment: str = ''

@@ -26,7 +26,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
         self.editable = editable
         self.main_window = main_window
         self.presenter = presenter
-        self.setColumnCount(0)
+        self.setColumnCount(1)
         # self.setExpandsOnDoubleClick(False)
         self.setHeaderLabel('label 1')
         header = self.headerItem()
@@ -58,6 +58,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
         for cat in root_cats:
             item = CategoryItem(self)
             item.setText(0, cat.name)
+            item.setText(1, str(cat.pk))
+            print(f'pk = {cat.pk}')
             added.append(cat.pk)
             cat_list.remove(cat)
             translator[cat.pk] = item
@@ -67,6 +69,8 @@ class CategoryTree(QtWidgets.QTreeWidget):
                 if cat.parent in added:
                     item = CategoryItem(translator[cat.parent])
                     item.setText(0, cat.name)
+                    item.setText(1, str(cat.pk))
+                    print(f'pk = {cat.pk}')
                     added.append(cat.pk)
                     cat_list.remove(cat)
                     translator[cat.pk] = item

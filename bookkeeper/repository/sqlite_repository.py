@@ -81,7 +81,7 @@ class SQLiteRepository(AbstractRepository[T]):
         cond_vals = []
         for item in conditions:
             cond_fields.append(item[0])
-            cond_vals.append(item[1])
+            cond_vals.append(str(item[1]))
         print(set(cond_fields))
         print(set(self.fields) | {'pk'})
 

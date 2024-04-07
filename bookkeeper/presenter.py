@@ -35,12 +35,16 @@ class Presenter:
         self.count_expenses()
         self.update_budgets()
         
+        self.view.register_update_categories(self.update_categories)
+        self.view.register_category_change(self.change_category)
+        self.view.register_category_add(self.add_category)
+        self.view.register_category_delete(self.delete_category)
+        self.view.register_children_getter(self.get_category_children)
+        self.view.register_parent_getter(self.get_category_parent)
 
-    def add_expense(self, expense_date, amount, category, comment, added_date = None):
-        if added_date:
-            exp = Expense(amount=amount, category=category, expense_date=expense_date, comment=comment, added_date=added_date)
-        else:
-            exp = Expense(amount=amount, category=category, expense_date=expense_date, comment=comment)
+
+    def add_expense(self, attr_val_dict):
+        exp = self.exp_class(**attr_val_dict)
         self.exp_repo.add(exp)
         self.update_expenses()
 
@@ -107,6 +111,77 @@ class Presenter:
         self.bud_repo.update(new_obj)
         self.update_budgets()
 
+
+    def update_categories(self):
+        categories = self.cat_repo.get_all()
+        self.view.update_categories(categories)
+
+
+    def change_category(self, attr_val_dict: dict):
+        old_object = self.cat_repo.get(attr_val_dict['pk'])
+        if not 'parent' in attr_val_dict.keys():
+            attr_val_dict['parent'] = old_object.parent
+        new_obj = self.cat_class(**attr_val_dict)
+        self.cat_repo.update(new_obj)
+        self.update_categories()
+
+
+    def add_category(self, attr_val_dict):
+        new_obj = self.cat_class(**attr_val_dict)
+        self.cat_repo.add(new_obj)
+        self.update_categories()
+
+
+    def delete_category(self, pk, transfer):
+        deleting_obj = self.cat_repo.get(pk)
+        new_parent_pk = int(deleting_obj.parent)
+
+        def manage_expenses(deleting_pk):
+            suffered_expenses = self.exp_repo.get_all(where={'category': int(deleting_pk)})
+
+            for expense in suffered_expenses:
+                attr_val_dict = {'pk': expense.pk,
+                                'amount': expense.amount,
+                                'category': new_parent_pk,
+                                'expense_date': expense.expense_date,
+                                'added_date': expense.added_date,
+                                'comment': expense.comment}
+                self.change_expense(attr_val_dict)
+
+        if not transfer:
+            def delete_obj_in_tree(obj):
+                children = obj.get_children(self.cat_repo)
+                if children:
+                    for child in children:
+                        delete_obj_in_tree(child)
+                manage_expenses(obj.pk)
+                self.cat_repo.delete(obj.pk)
+
+            delete_obj_in_tree(deleting_obj)
+        else:
+            children = deleting_obj.get_children(self.cat_repo)
+            for child in children:
+                attr_val_dict = {'pk': child.pk, 'name': child.name, 'parent': new_parent_pk}
+                self.change_category(attr_val_dict)
+            manage_expenses(deleting_obj.pk)
+            self.cat_repo.delete(deleting_obj.pk)
+    
+
+        self.update_categories()
+        self.update_expenses()
+
+
+    def get_category_children(self, pk):
+        obj = self.cat_repo.get(pk)
+        children = obj.get_children(self.cat_repo)
+        return children
+
+
+    def get_category_parent(self, pk):
+        obj = self.cat_repo.get(pk)
+        parent_pk = obj.parent
+        return parent_pk
+    
 
 class Bookkeeper:
     def __init__(self, cat_repo: AbstractRepository, bud_repo: AbstractRepository, exp_repo: AbstractRepository,
