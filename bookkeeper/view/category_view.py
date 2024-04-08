@@ -214,3 +214,30 @@ class CategoryDialog(QtWidgets.QDialog):
 
     def update_categories(self, categories):
         self.category_tree.update_categories(categories)
+
+
+class CategoryDialogEdit(QtWidgets.QDialog):
+            
+    def __init__(self, parent: QtWidgets.QWidget, update_func, change_func, add_func, delete_func) -> None:
+        super().__init__(parent)
+        self.my_parent = parent
+
+        self.resize(400, 500)
+        self.setWindowTitle('Редактирование категорий')
+        layout = QtWidgets.QVBoxLayout()
+
+        self.category_tree = CategoryTree(parent, True, update_func, change_func, add_func, delete_func)
+        layout.addWidget(self.category_tree)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        end_button = QtWidgets.QPushButton('Закрыть')
+        
+        end_button.clicked.connect(self.accept)
+        button_layout.addWidget(end_button)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
+
+    
+    def update_categories(self, categories):
+        self.category_tree.update_categories(categories)
