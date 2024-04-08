@@ -53,7 +53,7 @@ class Presenter:
 
         self.view.register_update_all(self.update_all)
 
-        
+
     def initiate_budget_repo(self):
         """
         Initiates budget repo with 3 entries
@@ -309,7 +309,7 @@ class Presenter:
 if __name__ == '__main__':
     app = QtWidgets.QApplication()
     window = MyWindow()
-    DIRECTORY = 'D:\\физтех\\proga\\bookkeeper_project\\tests\\test_db.db'
+    DIRECTORY = 'database.db'
     cat_repo = SQLiteRepository(DIRECTORY, Category)
     budget_repo = SQLiteRepository(DIRECTORY, Budget)
     expense_repo = SQLiteRepository(DIRECTORY, Expense)
