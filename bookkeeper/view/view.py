@@ -224,7 +224,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
 
     cat_signal = QtCore.Signal(CategoryItem)
 
-    def __init__(self, main_window: 'MyWindow', editable: bool, update_func, change_func, add_func, delete_func):
+    def __init__(self, main_window: 'MyWindow' | QtWidgets.QWidget, editable: bool, update_func, change_func, add_func, delete_func):
         super().__init__()
 
         self.editable = editable
@@ -429,7 +429,7 @@ class CategoryDialog(QtWidgets.QDialog):
 
 class CategoryDialogEdit(QtWidgets.QDialog):
             
-    def __init__(self, parent: QtWidgets.QWidget | None, update_func, change_func, add_func, delete_func) -> None:
+    def __init__(self, parent: QtWidgets.QWidget, update_func, change_func, add_func, delete_func) -> None:
         super().__init__(parent)
         self.my_parent = parent
 
@@ -589,11 +589,11 @@ class MyWindow(QtWidgets.QWidget):
     def register_category_delete(self, handler):
         self.delete_category_func = handler
 
-    def register_children_getter(self, handler):
-        self.children_getter = handler
+    # def register_children_getter(self, handler):
+    #     self.children_getter = handler
 
-    def register_parent_getter(self, handler):
-        self.parent_getter = handler
+    # def register_parent_getter(self, handler):
+    #     self.parent_getter = handler
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication()

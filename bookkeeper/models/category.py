@@ -35,8 +35,3 @@ class Category:
     @classmethod
     def copy(cls, obj):
         return cls(obj.pk, obj.name, obj.parent)
-    
-
-if __name__ == '__main__':
-    test_obj = Category(pk='1', name='name', parent='12')
-    print(test_obj)

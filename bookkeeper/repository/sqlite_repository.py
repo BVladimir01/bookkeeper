@@ -23,7 +23,7 @@ class SQLiteRepository(AbstractRepository[T]):
         conn.close()
 
 
-    def add(self, obj: T) -> int:
+    def add(self, obj: T) -> int | None:
 
         if getattr(obj, 'pk', None) != 0:
             raise ValueError('trying to add {} with filled pk attribute'.format(obj))

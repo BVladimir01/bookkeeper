@@ -12,3 +12,40 @@ class AbstractRepository(ABC):
         """
         Initiates all widget, fills data
         """
+
+    @abstractmethod
+    def register_exp_add(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_exp_delete(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_exp_change(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_exp_category_change(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_budget_change(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_update_categories(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_category_change(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_category_add(self, handler) -> None:
+        pass
+
+    @abstractmethod
+    def register_category_delete(self, handler) -> None:
+        pass
+    

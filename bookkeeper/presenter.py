@@ -6,12 +6,13 @@ from models.expense import Expense
 from PySide6 import QtWidgets
 import sys
 from view.view import MyWindow
+from view import abstract_view
 
 from datetime import date, timedelta
 
 class Presenter:
     def __init__(self, cat_repo: AbstractRepository, bud_repo: AbstractRepository, exp_repo: AbstractRepository,
-                 cat_class: Category, budget_class: Budget, exp_class: Expense, view: QtWidgets.QWidget) -> None:
+                 cat_class: Category, budget_class: Budget, exp_class: Expense, view: abstract_view) -> None:
         
 
         self.col_headers = ['pk', 'expense_date', 'amount', 'category', 'comment']

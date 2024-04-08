@@ -1,3 +1,8 @@
+"""
+Module describes class of Budget model
+"""
+
+
 from dataclasses import dataclass
 
 
@@ -17,10 +22,5 @@ class Budget:
             raise ValueError(f'Unsopported time period. Choose from {self._time_period_options}')
         for attr_name, attr_type in self.__annotations__.items():
             value = getattr(self, attr_name)
-            if type(value) != attr_type:
+            if not isinstance(value, attr_type):
                 setattr(self, attr_name, attr_type(value))
-
-
-if __name__ == '__main__':
-    test_obj = Budget(pk='1', amount='100', time_period='Месяц')
-    print(test_obj)
