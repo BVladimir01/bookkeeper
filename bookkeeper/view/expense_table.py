@@ -86,10 +86,10 @@ class ExpenseTable(QtWidgets.QTableWidget):
         if isinstance(active_item, QtWidgets.QTableWidgetItem):
             menu = QtWidgets.QMenu(self)
 
-            delete_action = menu.addAction('delete entry')
+            delete_action = menu.addAction('Удалить запись')
             delete_action.triggered.connect(self.delete_slot)
 
-            change_category = menu.addAction('Change_category')
+            change_category = menu.addAction('Изменить категорию')
             change_category.triggered.connect(self.change_category_slot)
 
             menu.exec(arg__1.globalPos())

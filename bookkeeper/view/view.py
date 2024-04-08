@@ -23,7 +23,7 @@ class MyWindow(QtWidgets.QWidget):
         self.budget_table = BudgetTable(self)
         self.init_ui()
 
-        self.setWindowTitle('The Bookkeeper app')
+        self.setWindowTitle('The Bookkeeper')
         self.resize(600, 800)
 
 

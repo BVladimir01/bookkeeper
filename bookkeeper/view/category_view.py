@@ -87,13 +87,13 @@ class CategoryTree(QtWidgets.QTreeWidget):
             if isinstance(self.itemAt(arg__1.pos()), CategoryItem):
                 menu = QtWidgets.QMenu(self)
 
-                add_action = menu.addAction('add')
+                add_action = menu.addAction('Добавить подкатегорию')
                 add_action.triggered.connect(self.add_category_slot)
 
-                edit_action = menu.addAction('edit')
+                edit_action = menu.addAction('Редактировать название')
                 edit_action.triggered.connect(self.change_category_slot)
 
-                delete_action = menu.addAction('delete')
+                delete_action = menu.addAction('Удалить категорию')
                 delete_action.triggered.connect(self.delete_category_slot)
 
                 # add other required actions
@@ -101,7 +101,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
                 # return super().contextMenuEvent(arg__1)
             else:
                 menu = QtWidgets.QMenu(self)
-                add_action = menu.addAction('add')
+                add_action = menu.addAction('Добавить новую категорию')
                 add_action.triggered.connect(self.add_category_slot)
                 # add other required actions
                 menu.exec(arg__1.globalPos())
