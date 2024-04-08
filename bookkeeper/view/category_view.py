@@ -1,8 +1,19 @@
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtCore import QEvent, QObject, Qt, QSize, Signal
+"""
+Describes classes for category view and managment
+CategoryDialog
+CategoryDialogEdit
+CategoryTree
+"""
+
+
+from typing import List
+from PySide6 import QtWidgets, QtGui
+from models.category import Category
 
 
 class CategoryItem(QtWidgets.QTreeWidgetItem):
+    """Class of items displayed in CategoryTree"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.setFlags(self.flags() | Qt.ItemIsEditable)
@@ -10,10 +21,13 @@ class CategoryItem(QtWidgets.QTreeWidgetItem):
 
 
 class CategoryTree(QtWidgets.QTreeWidget):
+    """
+    Widget that displays categories as tree structure
+    Allows to edit and choose category
+    """
 
-    cat_signal = QtCore.Signal(CategoryItem)
-
-    def __init__(self, main_window: QtWidgets.QWidget, editable: bool, update_func, change_func, add_func, delete_func):
+    def __init__(self, main_window: QtWidgets.QWidget, editable: bool,
+                 update_func, change_func, add_func, delete_func) -> None:
         super().__init__()
 
         self.editable = editable
@@ -30,7 +44,13 @@ class CategoryTree(QtWidgets.QTreeWidget):
         self.add_category_func = add_func
         self.delete_category_func = delete_func
 
-    def update_categories(self, categories):
+
+    def update_categories(self, categories: List[Category]) -> None:
+        """
+        Renews categories in user interface
+        Gets info from categories argument
+        """
+
         self.clear()
         cat_list = categories
         root_cats = [cat for cat in cat_list if cat.parent == 0]
@@ -56,48 +76,64 @@ class CategoryTree(QtWidgets.QTreeWidget):
             if cat_list == []:
                 break
 
-        self.cat_item_dic = translator
-
 
     def contextMenuEvent(self, arg__1: QtGui.QContextMenuEvent) -> None:
+        """
+        Displays options, availbale to user, when category item is clicked
+        Connects options to functions
+        """
+
         print(type(self.itemAt(arg__1.pos())))
         if self.editable:
             self.last_active_item = self.itemAt(arg__1.pos())
-            if type(self.itemAt(arg__1.pos())) == CategoryItem:
-                self.menu = QtWidgets.QMenu(self)
+            if isinstance(self.itemAt(arg__1.pos()), CategoryItem):
+                menu = QtWidgets.QMenu(self)
 
-                add_action = self.menu.addAction('add')
+                add_action = menu.addAction('add')
                 add_action.triggered.connect(self.add_category_slot)
 
-                edit_action = self.menu.addAction('edit')
+                edit_action = menu.addAction('edit')
                 edit_action.triggered.connect(self.change_category_slot)
 
-                delete_action = self.menu.addAction('delete')
+                delete_action = menu.addAction('delete')
                 delete_action.triggered.connect(self.delete_category_slot)
 
                 # add other required actions
-                self.menu.exec(arg__1.globalPos())
-                return super().contextMenuEvent(arg__1)
+                menu.exec(arg__1.globalPos())
+                # return super().contextMenuEvent(arg__1)
             else:
-                self.menu = QtWidgets.QMenu(self)
-                add_action = self.menu.addAction('add')
+                menu = QtWidgets.QMenu(self)
+                add_action = menu.addAction('add')
                 add_action.triggered.connect(self.add_category_slot)
                 # add other required actions
-                self.menu.exec(arg__1.globalPos())
-                return super().contextMenuEvent(arg__1)
-    
+                menu.exec(arg__1.globalPos())
+                # return super().contextMenuEvent(arg__1)
+
 
     def change_category_slot(self):
+        """
+        Called, when edit option of context menu is chosen
+        Opens dialog window that lets user change name
+        Updates categories afterwards
+        """
+
         pk = self.last_active_item.text(1)
         print('editing')
         dlg = QtWidgets.QInputDialog(self)
         dlg.resize(200, 50)
         new_name, ok = dlg.getText(self, 'Редактирование', 'Введите новое название категории')
         attr_val_dict = {'pk': pk, 'name': new_name}
-        if ok: self.change_category_func(attr_val_dict)
-    
+        if ok:
+            self.change_category_func(attr_val_dict)
+
 
     def add_category_slot(self):
+        """
+        Called, when add option of context menu is chosen
+        Opens dialog window that lets user enter name of new category
+        Updates categories afterwards
+        """
+
         print('adding')
         if self.last_active_item:
             parent_pk = self.last_active_item.text(1)
@@ -107,10 +143,18 @@ class CategoryTree(QtWidgets.QTreeWidget):
         dlg.resize(200, 50)
         new_name, ok = dlg.getText(self, 'Добавление', 'Введите название новой категории')
         attr_val_dict = {'parent': parent_pk, 'name': new_name}
-        self.add_category_func(attr_val_dict)
+        if ok:
+            self.add_category_func(attr_val_dict)
 
 
     def delete_category_slot(self):
+        """
+        Called, when delete option of context menu is chosen
+        Opens dialog window that asks user the way of deletion:
+        with or withoud transfer of children categories
+        Updates categories afterwards
+        """
+
         print('deleting')
         deleting_pk = int(self.last_active_item.text(1))
         children_count = self.last_active_item.childCount()
@@ -149,34 +193,15 @@ class CategoryTree(QtWidgets.QTreeWidget):
             self.delete_category_func(deleting_pk, False)
         elif res == transfer_button:
             self.delete_category_func(deleting_pk, True)
-        
-
-
-        # if res == delete_button:
-        #     def delete_obj_in_tree(pk):
-        #         children = self.get_children(pk)
-        #         if children:
-        #             for child in children:
-        #                 delete_obj_in_tree(child.pk)
-        #         self.delete_category_func(pk)
-                
-            
-        #     delete_obj_in_tree(deleting_pk)
-            
-        # if res == transfer_button:
-        #     children = self.get_children(deleting_pk)
-        #     parent_pk = self.get_parent(deleting_pk)
-        #     for child in children:
-        #         new_name = child.name
-        #         new_pk = child.pk
-        #         attr_val_dict = {'pk' : new_pk, 'name' : new_name, 'parent' : parent_pk }
-        #         self.change_category_func(attr_val_dict)
-        #     self.delete_category_func(deleting_pk)
 
 
 class CategoryDialog(QtWidgets.QDialog):
+    """
+    Dialog window that allows user to
+    choose category of new expense or
+    edit category of existing expense
+    """
 
-            
     def __init__(self, parent: QtWidgets.QWidget | None, update_func) -> None:
         super().__init__(parent)
         self.my_parent = parent
@@ -201,6 +226,12 @@ class CategoryDialog(QtWidgets.QDialog):
 
 
     def accept_slot(self):
+        """
+        Called when accept button is clicked
+        Sets active category when creating new expense or
+        Accepts choice of category when editing expense
+        """
+
         if getattr(self.my_parent, 'expense_table', None):
             selected_exp_category_pk = self.category_tree.currentItem().text(1)
             self.my_parent.chosen_exp_category_pk = selected_exp_category_pk
@@ -213,12 +244,18 @@ class CategoryDialog(QtWidgets.QDialog):
 
 
     def update_categories(self, categories):
+        """Renews categories in widget"""
+
         self.category_tree.update_categories(categories)
 
 
 class CategoryDialogEdit(QtWidgets.QDialog):
-            
-    def __init__(self, parent: QtWidgets.QWidget, update_func, change_func, add_func, delete_func) -> None:
+    """
+    Dialog window that allows user to manage categories
+    """
+
+    def __init__(self, parent: QtWidgets.QWidget,
+                 update_func, change_func, add_func, delete_func) -> None:
         super().__init__(parent)
         self.my_parent = parent
 
@@ -226,18 +263,21 @@ class CategoryDialogEdit(QtWidgets.QDialog):
         self.setWindowTitle('Редактирование категорий')
         layout = QtWidgets.QVBoxLayout()
 
-        self.category_tree = CategoryTree(parent, True, update_func, change_func, add_func, delete_func)
+        self.category_tree = CategoryTree(parent, True,
+                                          update_func, change_func, add_func, delete_func)
         layout.addWidget(self.category_tree)
 
         button_layout = QtWidgets.QHBoxLayout()
         end_button = QtWidgets.QPushButton('Закрыть')
-        
+
         end_button.clicked.connect(self.accept)
         button_layout.addWidget(end_button)
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
 
-    
+
     def update_categories(self, categories):
+        """Renews categories in widget"""
+
         self.category_tree.update_categories(categories)

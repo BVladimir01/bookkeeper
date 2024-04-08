@@ -6,8 +6,8 @@ Describes Class BudgetTable for MyWindow class
 from typing import List
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from bookkeeper.models.budget import Budget
-from bookkeeper.models.expense import Expense
+from models.budget import Budget
+from models.expense import Expense
 
 
 class BudgetTable(QtWidgets.QTableWidget):
