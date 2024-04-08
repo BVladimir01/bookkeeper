@@ -29,7 +29,6 @@ class Expense:
         extra init procedures for dataclass
         corrects types of __init__ args
         """
-
         for attr_name, attr_type in self.__annotations__.items():
             value = getattr(self, attr_name)
             if attr_name in ('expense_date', 'added_date'):

@@ -231,6 +231,7 @@ class CategoryDialog(QtWidgets.QDialog):
         else:
             selected_category_pk = self.category_tree.currentItem().text(1)
             selected_category_name = self.category_tree.currentItem().text(0)
+            selected_category_name = '<b>' + selected_category_name + '</b>'
             self.my_parent.chosen_category_pk = selected_category_pk
             self.my_parent.chosen_category_label.setText(selected_category_name)
         self.accept()
