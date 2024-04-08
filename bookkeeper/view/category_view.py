@@ -43,7 +43,7 @@ class CategoryTree(QtWidgets.QTreeWidget):
         self.change_category_func = change_func
         self.add_category_func = add_func
         self.delete_category_func = delete_func
-
+        self.hideColumn(1)
 
     def update_categories(self, categories: List[Category]) -> None:
         """
