@@ -1,3 +1,8 @@
+"""
+Describes Abstract class of repository classes
+"""
+
+
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Protocol, Any, Dict, List
 
@@ -13,7 +18,7 @@ T = TypeVar('T', bound=Model)
 
 
 class AbstractRepository(ABC, Generic[T]):
-
+    """Abstract class of repository classes"""
     @abstractmethod
     def add(self, obj:T) -> int:
         """
