@@ -1,8 +1,10 @@
-from itertools import count
-from typing import Any
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Protocol, Any, Dict, List
+"""
+Describes memory type of repository. Implements abstract repository
+"""
 
+
+from itertools import count
+from typing import Any, Dict, List
 from repository.abstract_repository import AbstractRepository, T
 
 
@@ -16,28 +18,41 @@ class MemoryRepository(AbstractRepository[T]):
         self._container = {}
         self._counter = count(1)
 
+
     def add(self, obj: T) -> int:
+        """add obj to repo"""
         #зачем именно гет, если обж из типа Т, можно просто обратиться
         if getattr(obj, 'pk', None) != 0:
-            raise ValueError('trying to add {} with filled pk attribute'.format(obj))
+            raise ValueError(f'trying to add {obj} with filled pk attribute')
         pk = next(self._counter)
         self._container[pk] = obj
         #Почему присваиваем пк если он и так типа Т
         obj.pk = pk
         return pk
 
+
     def get(self, pk: int) -> T | None:
+        """returns object with id=pk, else None"""
         return self._container.get(pk)
 
+
     def update(self, obj: T) -> None:
+        """Changes object with id=obj.pk to obj"""
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown pk')
         self._container[obj.pk] = obj
 
+
     def delete(self, pk: int) -> T:
+        """deletes object with id=pk and returns deleted object"""
         return self._container.pop(pk)
-    
+
+
     def get_all(self, where: Dict[str, Any] | None = None) -> List[T]:
+        """
+        returns list of instances with optional contidions of type
+        dict{str of attribute: value of attribute}
+        """
         if where is None:
             return list(self._container.values())
         res = []
