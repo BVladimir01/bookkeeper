@@ -12,6 +12,7 @@ class MemoryRepository(AbstractRepository[T]):
     """
     Работает в оперативной памяти. Хранит в словаре
     """
+
     def __init__(self) -> None:
         self._container : Dict[int, T]
 
@@ -20,7 +21,8 @@ class MemoryRepository(AbstractRepository[T]):
 
 
     def add(self, obj: T) -> int:
-        """add obj to repo"""
+        """add obj to repo, return id of added object"""
+
         #зачем именно гет, если обж из типа Т, можно просто обратиться
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add {obj} with filled pk attribute')
@@ -33,11 +35,13 @@ class MemoryRepository(AbstractRepository[T]):
 
     def get(self, pk: int) -> T | None:
         """returns object with id=pk, else None"""
+
         return self._container.get(pk)
 
 
     def update(self, obj: T) -> None:
         """Changes object with id=obj.pk to obj"""
+
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown pk')
         self._container[obj.pk] = obj
@@ -45,6 +49,7 @@ class MemoryRepository(AbstractRepository[T]):
 
     def delete(self, pk: int) -> T:
         """deletes object with id=pk and returns deleted object"""
+
         return self._container.pop(pk)
 
 
@@ -53,6 +58,7 @@ class MemoryRepository(AbstractRepository[T]):
         returns list of instances with optional contidions of type
         dict{str of attribute: value of attribute}
         """
+
         if where is None:
             return list(self._container.values())
         res = []

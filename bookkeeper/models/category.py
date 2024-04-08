@@ -16,6 +16,7 @@ class Category:
     атрибуте parent (у категорий верхнего
     уровня None).
     """
+
     pk: int = 0
     name: str = ''
     parent: int = 0
@@ -26,6 +27,7 @@ class Category:
         extra init procedures for dataclass
         corrects types of __init__ args
         """
+
         for attr_name, attr_type in self.__annotations__.items():
             value = getattr(self, attr_name)
             if not isinstance(value, attr_type):
@@ -34,6 +36,7 @@ class Category:
 
     def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
         """return parent object from repository"""
+
         if self.parent == 0:
             return None
         return repo.get(self.parent)
@@ -41,6 +44,7 @@ class Category:
 
     def get_children(self, repo: AbstractRepository['Category']) -> 'List[Category] | None':
         """returns child category objects of given object"""
+
         res = repo.get_all({'parent': self.pk})
         return res
 
@@ -48,4 +52,5 @@ class Category:
     @classmethod
     def copy(cls, obj):
         """returns copy of this object"""
+
         return cls(obj.pk, obj.name, obj.parent)

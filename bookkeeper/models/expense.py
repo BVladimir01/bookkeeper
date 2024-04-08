@@ -15,6 +15,7 @@ class Expense:
     атрибуте parent (у категорий верхнего
     уровня None).
     """
+
     pk: int = 0
     amount: int = 0
     category: int = 0
@@ -28,6 +29,7 @@ class Expense:
         extra init procedures for dataclass
         corrects types of __init__ args
         """
+
         for attr_name, attr_type in self.__annotations__.items():
             value = getattr(self, attr_name)
             if attr_name in ('expense_date', 'added_date'):

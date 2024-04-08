@@ -1,9 +1,19 @@
+"""
+Describes sqlite repository class.
+"""
+
+
 from inspect import get_annotations
 from typing import Any, Dict, List
-from repository.abstract_repository import AbstractRepository, T
 import sqlite3
+from repository.abstract_repository import AbstractRepository, T
+
 
 class SQLiteRepository(AbstractRepository[T]):
+    """
+    SQLiteRepository subclass of AbstractRepository
+    Implements abstract repository, works with sql db
+    """
 
     def __init__(self, db_file: str, cls: type) -> None:
         self.cls = cls
@@ -11,7 +21,8 @@ class SQLiteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
         self.attr_names = [field for field, typ in self.fields.items()]
-        passed_str = ',\n'.join([f'{field}' + ' TEXT' for field in self.attr_names if not field == 'pk'])
+        passed_str = ',\n'.join([f'{field}' + ' TEXT'
+                                 for field in self.attr_names if not field == 'pk'])
 
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -24,10 +35,11 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def add(self, obj: T) -> int | None:
+        """add obj to repo, return id of added object"""
 
         if getattr(obj, 'pk', None) != 0:
-            raise ValueError('trying to add {} with filled pk attribute'.format(obj))
-        
+            raise ValueError(f'trying to add {obj} with filled pk attribute')
+
         names = self.attr_names[1:]
         p = ', '.join('?'*len(names))
         values = [str(getattr(obj, x)) for x in names]
@@ -44,11 +56,13 @@ class SQLiteRepository(AbstractRepository[T]):
         conn.close()
 
         return obj.pk
-    
+
 
     def delete(self, pk: int) -> T:
+        """deletes object with id=pk and returns deleted object"""
+
         copy = self.get(pk)
-        if copy == None:
+        if copy is None:
             raise KeyError('No such id')
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -60,6 +74,11 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def get_all(self, where: Dict[str, Any] | None = None) -> List[T]:
+        """
+        returns list of instances with optional contidions of type
+        dict{str of attribute: value of attribute}
+        """
+
         res_list = []
 
         if not where:
@@ -72,10 +91,10 @@ class SQLiteRepository(AbstractRepository[T]):
             conn.close()
             if args_list:
                 for args in args_list:
-                    names_vals_dict = {attr_name: attr_val for attr_name, attr_val in zip(self.attr_names, args)}
-                    res_list.append(self.cls(**names_vals_dict)) 
+                    names_vals_dict = dict(zip(self.attr_names, args))
+                    res_list.append(self.cls(**names_vals_dict))
             return res_list
-        
+
         conditions = where.items()
         cond_fields = []
         cond_vals = []
@@ -86,12 +105,14 @@ class SQLiteRepository(AbstractRepository[T]):
         print(set(self.fields) | {'pk'})
 
         if not set(cond_fields) <= (set(self.fields) | {'pk'}):
-            raise KeyError('no such column(s): ' + str(set(cond_fields) - set(self.fields) - {'pk'}))
-        
-        queries = ''
-        for field in cond_fields:
-            queries += f' and {field} = ?'
-        queries = queries[5:]
+            raise KeyError('no such column(s): '
+                           + str(set(cond_fields) - set(self.fields) - {'pk'}))
+
+        # queries = ''
+        # for field in cond_fields:
+        #     queries += f' and {field} = ?'
+        # queries = queries[5:]
+        queries = ' and '.join(f'{field} = ?' for field in cond_fields)
         queries = queries.replace(' pk ', ' id ')
 
         conn = sqlite3.connect(self.db_file)
@@ -104,12 +125,14 @@ class SQLiteRepository(AbstractRepository[T]):
         conn.close()
         if args_list:
             for args in args_list:
-                    names_vals_dict = {attr_name: attr_val for attr_name, attr_val in zip(self.attr_names, args)}
-                    res_list.append(self.cls(**names_vals_dict))
+                names_vals_dict = dict(zip(self.attr_names, args))
+                res_list.append(self.cls(**names_vals_dict))
         return res_list
 
 
     def get(self, pk: int) -> T | None:
+        """returns object with id=pk, else None"""
+
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
@@ -117,14 +140,16 @@ class SQLiteRepository(AbstractRepository[T]):
         args = res.fetchone()
         conn.commit()
         conn.close()
-        if args == None:
+        if args is None:
             return None
-        names_vals_dict = {attr_name: attr_val for attr_name, attr_val in zip(self.attr_names, args)}
+        names_vals_dict = dict(zip(self.attr_names, args))
         copy = self.cls(**names_vals_dict)
         return copy
 
 
     def update(self, obj: T) -> None:
+        """Changes object with id=obj.pk to obj"""
+
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown pk')
         id = obj.pk
@@ -137,6 +162,6 @@ class SQLiteRepository(AbstractRepository[T]):
         cursor.execute('PRAGMA foreign_keys = ON')
         print(f"""UPDATE {self.table_name} SET {passed_str} WHERE id = {id};""")
         print(new_values)
-        res = cursor.execute(f"""UPDATE {self.table_name} SET {passed_str} WHERE id = {id};""")
+        cursor.execute(f"""UPDATE {self.table_name} SET {passed_str} WHERE id = {id};""")
         conn.commit()
         conn.close()

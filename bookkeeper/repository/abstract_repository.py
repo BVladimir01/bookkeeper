@@ -19,6 +19,7 @@ T = TypeVar('T', bound=Model)
 
 class AbstractRepository(ABC, Generic[T]):
     """Abstract class of repository classes"""
+
     @abstractmethod
     def add(self, obj:T) -> int:
         """
