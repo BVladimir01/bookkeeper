@@ -69,6 +69,22 @@ class Presenter:
         attr_val_argument is a dict of arguments {key: value}
         calls update_expenses
         """
+        if 'amount' in attr_val_dict.keys():
+            amount = attr_val_dict['amount']
+            try:
+                int(amount)
+            except ValueError:
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) != float(amount):
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) < 0:
+                raise ValueError('Сумма должна быть неотрицательной')
+        if 'expense_date' in attr_val_dict.keys():
+            expense_date = attr_val_dict['expense_date']
+            try:
+                date.fromisoformat(expense_date)
+            except ValueError:
+                raise ValueError('Укажите дату в формате YYYY-MM-DD')
         exp = self.exp_class(**attr_val_dict)
         self.exp_repo.add(exp)
         self.update_expenses()
@@ -90,6 +106,22 @@ class Presenter:
         {key: value} for new obj
         calls update_expenses
         """
+        if 'amount' in attr_val_dict.keys():
+            amount = attr_val_dict['amount']
+            try:
+                int(amount)
+            except ValueError:
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) != float(amount):
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) < 0:
+                raise ValueError('Сумма должна быть неотрицательной')
+        if 'expense_date' in attr_val_dict.keys():
+            expense_date = attr_val_dict['expense_date']
+            try:
+                date.fromisoformat(expense_date)
+            except ValueError:
+                raise ValueError('Укажите дату в формате YYYY-MM-DD')
         new_obj = self.exp_class(**attr_val_dict)
         self.exp_repo.update(new_obj)
         self.update_expenses()
@@ -160,6 +192,16 @@ class Presenter:
         {key: value} for new obj
         calls update_budgets
         """
+        if 'amount' in attr_val_dict.keys():
+            amount = attr_val_dict['amount']
+            try:
+                int(amount)
+            except ValueError:
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) != float(amount):
+                raise ValueError('Сумма должна быть целым числом')
+            if int(amount) < 0:
+                raise ValueError('Сумма должна быть неотрицательной')
         new_obj = self.budget_class(**attr_val_dict)
         self.bud_repo.update(new_obj)
         self.update_budgets()
@@ -251,6 +293,14 @@ class Presenter:
 
 
         self.update_categories()
+        self.update_expenses()
+
+
+    def update_all(self):
+        """
+        Updates everything in view
+        """
+        self.update_budgets()
         self.update_expenses()
 
 

@@ -229,6 +229,15 @@ class MyWindow(QtWidgets.QWidget):
         """
         self.delete_category_func = handler
 
+
+    def register_update_all(self, handler):
+        """
+        Registers self as function
+        that updates everything in view
+        based on current data
+        """
+        self.update_all = handler
+
     # def register_children_getter(self, handler):
     #     self.children_getter = handler
 
