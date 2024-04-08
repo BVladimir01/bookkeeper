@@ -48,9 +48,3 @@ class Category:
         """
         res = repo.get_all({'parent': self.pk})
         return res
-
-
-    # @classmethod
-    # def copy(cls, obj):
-    #     """returns copy of this object"""
-    #     return cls(obj.pk, obj.name, obj.parent)

@@ -30,7 +30,7 @@ class BudgetTable(QtWidgets.QTableWidget):
         hor_header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         self.setFixedHeight(116)
 
-        # self.hideColumn(1)
+        self.hideColumn(1)
 
         self.itemChanged.connect(self.change_slot)
 

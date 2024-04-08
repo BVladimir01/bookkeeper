@@ -49,8 +49,6 @@ class SQLiteRepository(AbstractRepository[T]):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
-        print(f'INSERT into {self.table_name} ({passed_str}) VALUES ({p})')
-        print(values)
         cursor.execute(f'INSERT into {self.table_name} ({passed_str}) VALUES ({p})', values)
         obj.pk = cursor.lastrowid
         conn.commit()
@@ -101,8 +99,6 @@ class SQLiteRepository(AbstractRepository[T]):
         for item in conditions:
             cond_fields.append(item[0])
             cond_vals.append(str(item[1]))
-        print(set(cond_fields))
-        print(set(self.fields) | {'pk'})
         if not set(cond_fields) <= (set(self.fields) | {'pk'}):
             raise KeyError('no such column(s): '
                            + str(set(cond_fields) - set(self.fields) - {'pk'}))
@@ -112,7 +108,6 @@ class SQLiteRepository(AbstractRepository[T]):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
-        print(f'SELECT * FROM {self.table_name} WHERE ' + queries)
         res = cursor.execute(f'SELECT * FROM {self.table_name} WHERE ' + queries, cond_vals)
         args_list = res.fetchall()
         conn.commit()
@@ -156,8 +151,6 @@ class SQLiteRepository(AbstractRepository[T]):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
-        print(f"""UPDATE {self.table_name} SET {passed_str} WHERE id = {id};""")
-        print(new_values)
         cursor.execute(f"""UPDATE {self.table_name} SET {passed_str} WHERE id = {id};""")
         conn.commit()
         conn.close()

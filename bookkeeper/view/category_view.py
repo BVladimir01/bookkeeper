@@ -81,7 +81,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Displays options, availbale to user, when category item is clicked
         Connects options to functions
         """
-        print(type(self.itemAt(arg__1.pos())))
         if self.editable:
             self.last_active_item = self.itemAt(arg__1.pos())
             if isinstance(self.itemAt(arg__1.pos()), CategoryItem):
@@ -96,16 +95,12 @@ class CategoryTree(QtWidgets.QTreeWidget):
                 delete_action = menu.addAction('Удалить категорию')
                 delete_action.triggered.connect(self.delete_category_slot)
 
-                # add other required actions
                 menu.exec(arg__1.globalPos())
-                # return super().contextMenuEvent(arg__1)
             else:
                 menu = QtWidgets.QMenu(self)
                 add_action = menu.addAction('Добавить новую категорию')
                 add_action.triggered.connect(self.add_category_slot)
-                # add other required actions
                 menu.exec(arg__1.globalPos())
-                # return super().contextMenuEvent(arg__1)
 
 
     def change_category_slot(self):
@@ -115,7 +110,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Updates categories afterwards
         """
         pk = self.last_active_item.text(1)
-        print('editing')
         dlg = QtWidgets.QInputDialog(self)
         dlg.resize(200, 50)
         new_name, ok = dlg.getText(self, 'Редактирование', 'Введите новое название категории')
@@ -130,7 +124,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Opens dialog window that lets user enter name of new category
         Updates categories afterwards
         """
-        print('adding')
         if self.last_active_item:
             parent_pk = self.last_active_item.text(1)
         else:
@@ -150,7 +143,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         with or withoud transfer of children categories
         Updates categories afterwards
         """
-        print('deleting')
         deleting_pk = int(self.last_active_item.text(1))
         children_count = self.last_active_item.childCount()
 

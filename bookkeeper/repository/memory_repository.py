@@ -24,12 +24,10 @@ class MemoryRepository(AbstractRepository[T]):
         """
         add obj to repo, return id of added object
         """
-        #зачем именно гет, если обж из типа Т, можно просто обратиться
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add {obj} with filled pk attribute')
         pk = next(self._counter)
         self._container[pk] = obj
-        #Почему присваиваем пк если он и так типа Т
         obj.pk = pk
         return pk
 

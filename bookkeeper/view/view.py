@@ -240,15 +240,3 @@ class MyWindow(QtWidgets.QWidget):
         based on current data
         """
         self.update_all = handler
-
-    # def register_children_getter(self, handler):
-    #     self.children_getter = handler
-
-    # def register_parent_getter(self, handler):
-    #     self.parent_getter = handler
-
-# if __name__ == '__main__':
-#     app = QtWidgets.QApplication()
-#     window = MyWindow()
-#     window.show()
-#     sys.exit(app.exec())

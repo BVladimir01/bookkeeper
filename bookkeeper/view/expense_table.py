@@ -32,8 +32,8 @@ class ExpenseTable(QtWidgets.QTableWidget):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.Stretch)
-        # self.hideColumn(0)
-        # self.hideColumn(3)
+        self.hideColumn(0)
+        self.hideColumn(3)
 
         self.verticalHeader().hide()
         self.itemChanged.connect(self.change_slot)
@@ -84,7 +84,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Connects options with functions
         User can delete entry or change category of entry
         """
-        print(type(self.itemAt(arg__1.pos())))
         self.last_active_item = self.itemAt(arg__1.pos())
         active_item = self.last_active_item
         if isinstance(active_item, QtWidgets.QTableWidgetItem):
@@ -156,7 +155,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         if res == delete_button:
             row = self.last_active_item.row()
             pk = int(self.item(row, 0).text())
-            print(pk)
             self.delete_func(pk)
 
 
@@ -192,7 +190,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Called when user adds new category from main windowe
         Collects data and delegates to handler
         """
-        print(obj)
         self.itemChanged.disconnect(self.change_slot)
         self.insertRow(0)
         self.setItem(0, 0, QtWidgets.QTableWidgetItem(str(obj.pk)))
