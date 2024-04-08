@@ -51,7 +51,9 @@ class Presenter:
         self.view.register_category_add(self.add_category)
         self.view.register_category_delete(self.delete_category)
 
+        self.view.register_update_all(self.update_all)
 
+        
     def initiate_budget_repo(self):
         """
         Initiates budget repo with 3 entries

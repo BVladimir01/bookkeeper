@@ -103,12 +103,15 @@ class MyWindow(QtWidgets.QWidget):
         attr_val_dict['expense_date'] = expense_date
         attr_val_dict['comment'] = comment
         attr_val_dict['category'] = category_pk
-        self.add_exp_func(attr_val_dict)
+        try:
+            self.add_exp_func(attr_val_dict)
+            delattr(self, 'chosen_category_pk')
+            self.chosen_category_label.setText('')
+            self.edit_comment_line.setText('')
+            self.edit_amount_line.setText('')            
+        except ValueError as error:
+            QtWidgets.QMessageBox.critical(self, 'Ошибка', str(error))
 
-        delattr(self, 'chosen_category_pk')
-        self.chosen_category_label.setText('')
-        self.edit_comment_line.setText('')
-        self.edit_amount_line.setText('')
 
     def choose_category_slot(self) -> None:
         """

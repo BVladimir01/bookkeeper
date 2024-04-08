@@ -70,6 +70,10 @@ class ExpenseTable(QtWidgets.QTableWidget):
                     text = str(getattr(expense, attr_name))
                 self.setItem(0, i, QtWidgets.QTableWidgetItem(text))
 
+        for i in range(self.rowCount()):
+            flags = self.item(i, 4).flags()
+            self.item(i, 4).setFlags(flags & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+        
         self.sortByColumn(1, QtCore.Qt.SortOrder.DescendingOrder)
         self.itemChanged.connect(self.change_slot)
 
@@ -114,7 +118,11 @@ class ExpenseTable(QtWidgets.QTableWidget):
             attr_name = self.tranlator.get(header)
             if attr_name:
                 attr_val_dict[attr_name] = self.item(item.row(), i).text()
-        self.change_func(attr_val_dict)
+        try:
+            self.change_func(attr_val_dict)
+        except ValueError as error:
+            QtWidgets.QMessageBox.critical(self, 'Ошибка', str(error))            
+            self.my_parent.update_all()
 
 
     def register_delete(self, handler) -> None:

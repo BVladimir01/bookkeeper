@@ -17,7 +17,7 @@ class CategoryItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.setFlags(self.flags() | Qt.ItemIsEditable)
-        self.setToolTip(0, 'right click for options')
+        self.setToolTip(0, 'Нажмите ПКМ для выбора действий')
 
 
 class CategoryTree(QtWidgets.QTreeWidget):

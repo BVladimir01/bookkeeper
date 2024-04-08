@@ -14,11 +14,12 @@ class BudgetTable(QtWidgets.QTableWidget):
     """
     Widget that displays budget requirements and counts expenses
     """
-    
+
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
 
         self.initiated = False
+        self.my_parent = parent
 
         self.setColumnCount(3)
         self.setRowCount(3)
@@ -59,9 +60,9 @@ class BudgetTable(QtWidgets.QTableWidget):
                     pk = self.item(item.row(), 1).text()
                     attr_val_dict['pk'] = pk
                     self.change_budget(attr_val_dict)
-                except ValueError:
-                    print('enter correct budget')
-                    input()
+                except ValueError as error:
+                    QtWidgets.QMessageBox.critical(self, 'Ошибка', str(error))
+                    self.my_parent.update_all()
 
 
     def update_budgets(self, budgets: List[Budget]):
