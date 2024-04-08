@@ -40,9 +40,6 @@ class Presenter:
         self.view.register_category_change(self.change_category)
         self.view.register_category_add(self.add_category)
         self.view.register_category_delete(self.delete_category)
-        self.view.register_children_getter(self.get_category_children)
-        self.view.register_parent_getter(self.get_category_parent)
-
 
     def add_expense(self, attr_val_dict):
         exp = self.exp_class(**attr_val_dict)
