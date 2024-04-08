@@ -107,7 +107,8 @@ class MyWindow(QtWidgets.QWidget):
 
         delattr(self, 'chosen_category_pk')
         self.chosen_category_label.setText('')
-
+        self.edit_comment_line.setText('')
+        self.edit_amount_line.setText('')
 
     def choose_category_slot(self) -> None:
         """
