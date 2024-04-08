@@ -121,7 +121,8 @@ class Presenter:
         if 'expense_date' in attr_val_dict.keys():
             expense_date = attr_val_dict['expense_date']
             try:
-                date.fromisoformat(expense_date)
+                if not isinstance(expense_date, date):
+                    date.fromisoformat(expense_date)
             except ValueError:
                 raise ValueError('Укажите дату в формате YYYY-MM-DD')
         new_obj = self.exp_class(**attr_val_dict)
@@ -255,7 +256,7 @@ class Presenter:
         deleting_obj = self.cat_repo.get(pk)
         new_parent_pk = int(deleting_obj.parent)
 
-        def manage_expenses(deleting_pk):
+        def manage_expenses(deleting_pk: int | str):
             """
             Changes expenses, when their category is delted
             Changes its category to parent if exists
