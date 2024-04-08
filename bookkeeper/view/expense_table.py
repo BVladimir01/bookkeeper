@@ -48,7 +48,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Renews expenses entries in user interface
         Gets information from expenses and categores arguments
         """
-
         headers = self.headers
         translator = self.tranlator
         self.itemChanged.disconnect(self.change_slot)
@@ -81,7 +80,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Connects options with functions
         User can delete entry or change category of entry
         """
-
         print(type(self.itemAt(arg__1.pos())))
         self.last_active_item = self.itemAt(arg__1.pos())
         active_item = self.last_active_item
@@ -102,7 +100,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Registers handler as function to handle change of expense entry
         Handler function manages back end
         """
-
         self.change_func = handler
 
 
@@ -112,7 +109,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         are changed by user via user interface
         Collects data and delegates to handler
         """
-
         attr_val_dict = {}
         for i, header in enumerate(self.headers):
             attr_name = self.tranlator.get(header)
@@ -126,7 +122,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Registers handler as function to handle deletions of expense enrty
         Handler function manages back end
         """
-
         self.delete_func = handler
 
 
@@ -136,7 +131,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Opens dialog window to confirm deletion
         Collects data and delegates to handler
         """
-
         delete_button = QtWidgets.QMessageBox.StandardButton.Discard
         cancel_button = QtWidgets.QMessageBox.StandardButton.Cancel
 
@@ -163,7 +157,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Registers handler as function to handle change of category
         Handler function manages back end
         """
-
         self.exp_category_change_func = handler
 
 
@@ -173,7 +166,6 @@ class ExpenseTable(QtWidgets.QTableWidget):
         Opens dialog window to choose new category
         Collects data and delegates to handler
         """
-
         parent = self.my_parent
         parent = self.parent()
         parent.dlg = CategoryDialog(self, parent.update_categories_func)

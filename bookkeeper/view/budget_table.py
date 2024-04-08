@@ -14,7 +14,7 @@ class BudgetTable(QtWidgets.QTableWidget):
     """
     Widget that displays budget requirements and counts expenses
     """
-
+    
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
 
@@ -40,7 +40,6 @@ class BudgetTable(QtWidgets.QTableWidget):
         Handler function is from presenter,
         it handles back end of budget change
         """
-
         self.change_budget = handler
 
 
@@ -49,7 +48,6 @@ class BudgetTable(QtWidgets.QTableWidget):
         Called when user changes budget via user inteface.
         Calls register_budget_change
         """
-
         if self.initiated:
             if item.column() == 2:
                 attr_val_dict = {}
@@ -71,7 +69,6 @@ class BudgetTable(QtWidgets.QTableWidget):
         Renews budget entries in user interface
         Gets information for update from budgets argument
         """
-
         self.itemChanged.disconnect(self.change_slot)
         for i in range(3):
             self.setItem(i, 1, QtWidgets.QTableWidgetItem(str(budgets[i].pk)))

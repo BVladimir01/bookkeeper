@@ -35,8 +35,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def add(self, obj: T) -> int | None:
-        """add obj to repo, return id of added object"""
-
+        """
+        add obj to repo, return id of added object
+        """
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add {obj} with filled pk attribute')
 
@@ -59,8 +60,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def delete(self, pk: int) -> T:
-        """deletes object with id=pk and returns deleted object"""
-
+        """
+        deletes object with id=pk and returns deleted object
+        """
         copy = self.get(pk)
         if copy is None:
             raise KeyError('No such id')
@@ -78,9 +80,7 @@ class SQLiteRepository(AbstractRepository[T]):
         returns list of instances with optional contidions of type
         dict{str of attribute: value of attribute}
         """
-
         res_list = []
-
         if not where:
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
@@ -103,18 +103,12 @@ class SQLiteRepository(AbstractRepository[T]):
             cond_vals.append(str(item[1]))
         print(set(cond_fields))
         print(set(self.fields) | {'pk'})
-
         if not set(cond_fields) <= (set(self.fields) | {'pk'}):
             raise KeyError('no such column(s): '
                            + str(set(cond_fields) - set(self.fields) - {'pk'}))
 
-        # queries = ''
-        # for field in cond_fields:
-        #     queries += f' and {field} = ?'
-        # queries = queries[5:]
         queries = ' and '.join(f'{field} = ?' for field in cond_fields)
         queries = queries.replace(' pk ', ' id ')
-
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
@@ -131,8 +125,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def get(self, pk: int) -> T | None:
-        """returns object with id=pk, else None"""
-
+        """
+        returns object with id=pk, else None
+        """
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
         cursor.execute('PRAGMA foreign_keys = ON')
@@ -148,8 +143,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
 
     def update(self, obj: T) -> None:
-        """Changes object with id=obj.pk to obj"""
-
+        """
+        Changes object with id=obj.pk to obj
+        """
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown pk')
         id = obj.pk

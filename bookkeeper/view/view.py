@@ -28,8 +28,9 @@ class MyWindow(QtWidgets.QWidget):
 
 
     def init_ui(self) -> None:
-        """Initiates widgets and layout of window"""
-
+        """
+        Initiates widgets and layout of window
+        """
         self.general_layout = QtWidgets.QVBoxLayout()
 
         self.general_layout.addWidget(QtWidgets.QLabel('Записи'))
@@ -44,8 +45,9 @@ class MyWindow(QtWidgets.QWidget):
 
 
     def add_edit_layout(self) -> None:
-        """Initiates layout for adding expense entries"""
-
+        """
+        Initiates layout for adding expense entries
+        """
         edit_layout = QtWidgets.QGridLayout()
 
         edit_layout.addWidget(QtWidgets.QLabel('Дата расхода'), 0, 0)
@@ -90,7 +92,6 @@ class MyWindow(QtWidgets.QWidget):
         Collects data
         Delegates addition of expense entry
         """
-
         if not hasattr(self, 'chosen_category_pk'):
             self.chosen_category_pk = 0
         amount = self.edit_amount_line.text()
@@ -113,7 +114,6 @@ class MyWindow(QtWidgets.QWidget):
         Called when choose category button is clicked
         Opens dialog window with categories to choose
         """
-
         self.dlg = CategoryDialog(self, self.update_categories_func)
         self.update_categories_func()
         self.dlg.exec()
@@ -124,7 +124,6 @@ class MyWindow(QtWidgets.QWidget):
         Called when edit categores button is clicked
         Opens dialog window with categories to edit
         """
-
         self.dlg = CategoryDialogEdit(self, self.update_categories_func, self.change_category_func,
                                       self.add_category_func, self.delete_category_func)
         self.update_categories_func()
@@ -162,14 +161,6 @@ class MyWindow(QtWidgets.QWidget):
         that adds new expense entry
         """
         self.expenses_table.register_change(handler)
-
-
-    def register_exp_category_change(self, handler) -> None:
-        """
-        Registers handler as function
-        that changes category of existing expense entry
-        """
-        self.expenses_table.register_exp_category_change(handler)
 
 
     def display_expenses(self, expenses) -> None:

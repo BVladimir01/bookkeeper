@@ -50,7 +50,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Renews categories in user interface
         Gets info from categories argument
         """
-
         self.clear()
         cat_list = categories
         root_cats = [cat for cat in cat_list if cat.parent == 0]
@@ -82,7 +81,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Displays options, availbale to user, when category item is clicked
         Connects options to functions
         """
-
         print(type(self.itemAt(arg__1.pos())))
         if self.editable:
             self.last_active_item = self.itemAt(arg__1.pos())
@@ -116,7 +114,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Opens dialog window that lets user change name
         Updates categories afterwards
         """
-
         pk = self.last_active_item.text(1)
         print('editing')
         dlg = QtWidgets.QInputDialog(self)
@@ -133,7 +130,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         Opens dialog window that lets user enter name of new category
         Updates categories afterwards
         """
-
         print('adding')
         if self.last_active_item:
             parent_pk = self.last_active_item.text(1)
@@ -154,7 +150,6 @@ class CategoryTree(QtWidgets.QTreeWidget):
         with or withoud transfer of children categories
         Updates categories afterwards
         """
-
         print('deleting')
         deleting_pk = int(self.last_active_item.text(1))
         children_count = self.last_active_item.childCount()
@@ -201,7 +196,6 @@ class CategoryDialog(QtWidgets.QDialog):
     choose category of new expense or
     edit category of existing expense
     """
-
     def __init__(self, parent: QtWidgets.QWidget | None, update_func) -> None:
         super().__init__(parent)
         self.my_parent = parent
@@ -231,7 +225,6 @@ class CategoryDialog(QtWidgets.QDialog):
         Sets active category when creating new expense or
         Accepts choice of category when editing expense
         """
-
         if getattr(self.my_parent, 'expense_table', None):
             selected_exp_category_pk = self.category_tree.currentItem().text(1)
             self.my_parent.chosen_exp_category_pk = selected_exp_category_pk
@@ -245,7 +238,6 @@ class CategoryDialog(QtWidgets.QDialog):
 
     def update_categories(self, categories):
         """Renews categories in widget"""
-
         self.category_tree.update_categories(categories)
 
 
@@ -279,5 +271,4 @@ class CategoryDialogEdit(QtWidgets.QDialog):
 
     def update_categories(self, categories):
         """Renews categories in widget"""
-
         self.category_tree.update_categories(categories)
