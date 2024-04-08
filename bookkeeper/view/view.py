@@ -1,6 +1,5 @@
 import sys
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtCore import QEvent, QObject, Qt, QSize, Signal
+from PySide6 import QtWidgets
 from datetime import date
 from view.budget_table import *
 from view.category_view import *
