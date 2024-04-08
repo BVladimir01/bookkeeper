@@ -1,10 +1,14 @@
+"""
+Describes Expense model class
+"""
+
+
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 
 
 @dataclass
 class Expense:
-    
     """
     Категория расходов, хранит название в
     атрибуте name и ссылку (id) на родителя в
@@ -18,12 +22,17 @@ class Expense:
     added_date:  date = date.today()
     comment: str = ''
 
+
     def __post_init__(self):
+        """
+        extra init procedures for dataclass
+        corrects types of __init__ args
+        """
         for attr_name, attr_type in self.__annotations__.items():
             value = getattr(self, attr_name)
-            if attr_name == 'expense_date' or attr_name == 'added_date':
-                if type(value)  != attr_type:
+            if attr_name in ('expense_date', 'added_date'):
+                if not isinstance(value, attr_type):
                     setattr(self, attr_name, date.fromisoformat(value))
             else:
-                if type(value)  != attr_type:
-                    setattr(self, attr_name, attr_type(value)) 
+                if not isinstance(value, attr_type):
+                    setattr(self, attr_name, attr_type(value))
